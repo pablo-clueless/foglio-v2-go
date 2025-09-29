@@ -1,0 +1,13 @@
+FROM golang:1.24.7-alpine
+
+RUN mkdir /app
+
+ADD . /app
+
+WORKDIR /app
+
+RUN go build -o main main.go
+
+EXPOSE 8080
+
+CMD ["/app/main"]

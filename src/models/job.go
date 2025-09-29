@@ -3,26 +3,28 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Job struct {
-	ID             string         `json:"id" gorm:"primaryKey"`
-	Title          string         `json:"title"`
-	Company        string         `json:"company"`
-	Location       string         `json:"location"`
-	Description    string         `json:"description"`
-	Requirements   []string       `json:"requirements" gorm:"serializer:json"`
-	Salary         *Salary        `json:"salary,omitempty" gorm:"embedded;embeddedPrefix:salary_"`
-	PostedDate     time.Time      `json:"postedDate"`
-	Deadline       *time.Time     `json:"deadline,omitempty"`
-	IsRemote       bool           `json:"isRemote"`
-	EmploymentType string         `json:"employmentType"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
-	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
-	CreatedBy      string         `json:"created_by" gorm:"column:created_by;not null" validate:"required"`
-	CreatedByUser  User           `json:"created_by_user" gorm:"foreignKey:CreatedBy;references:ID"`
+	ID             uuid.UUID        `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	Title          string           `json:"title" gorm:"not null"`
+	Company        string           `json:"company" gorm:"not null"`
+	Location       string           `json:"location" gorm:"not null"`
+	Description    string           `json:"description" gorm:"not null"`
+	Requirements   []string         `json:"requirements" gorm:"serializer:json"`
+	Salary         *Salary          `json:"salary,omitempty" gorm:"embedded;embeddedPrefix:salary_"`
+	PostedDate     time.Time        `json:"posted_date" gorm:"not null"`
+	Deadline       *time.Time       `json:"deadline,omitempty"`
+	IsRemote       bool             `json:"is_remote" gorm:"default:false"`
+	EmploymentType string           `json:"employment_type" gorm:"not null"`
+	CreatedBy      uuid.UUID        `json:"created_by" gorm:"type:uuid;not null;index"`
+	CreatedByUser  User             `json:"created_by_user" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnDelete:CASCADE"`
+	Applications   []JobApplication `json:"applications,omitempty" gorm:"foreignKey:JobID;constraint:OnDelete:CASCADE"`
+	CreatedAt      time.Time        `json:"created_at"`
+	UpdatedAt      time.Time        `json:"updated_at"`
+	DeletedAt      gorm.DeletedAt   `json:"-" gorm:"index"`
 }
 
 type Salary struct {
@@ -31,56 +33,51 @@ type Salary struct {
 	Currency string `json:"currency" gorm:"column:currency"`
 }
 
-type JobSearch struct {
-	Keywords       []string `json:"keywords,omitempty"`
-	Location       *string  `json:"location,omitempty"`
-	EmploymentType []string `json:"employmentType,omitempty"`
-	SalaryMin      *int64   `json:"salaryMin,omitempty"`
-	SalaryMax      *int64   `json:"salaryMax,omitempty"`
-	IsRemote       *bool    `json:"isRemote,omitempty"`
-	SortBy         *string  `json:"sortBy,omitempty"`
-	Page           *int     `json:"page,omitempty"`
-	Limit          *int     `json:"limit,omitempty"`
-}
-
 type JobApplication struct {
-	ID             string         `json:"id" gorm:"primaryKey"`
-	JobID          string         `json:"jobId" gorm:"index"`
-	ApplicantID    string         `json:"applicantId" gorm:"index"`
-	Resume         string         `json:"resume"`
+	ID             uuid.UUID      `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	JobID          uuid.UUID      `json:"job_id" gorm:"type:uuid;not null;index"`
+	Job            Job            `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
+	ApplicantID    uuid.UUID      `json:"applicantId" gorm:"type:uuid;not null;index"`
+	Applicant      User           `json:"applicant" gorm:"foreignKey:ApplicantID;references:ID;constraint:OnDelete:CASCADE"`
+	Resume         string         `json:"resume" gorm:"not null"`
 	CoverLetter    *string        `json:"coverLetter,omitempty"`
-	Status         string         `json:"status"` // e.g. "pending", "reviewed", "rejected", "hired"
-	SubmissionDate time.Time      `json:"submissionDate"`
-	LastUpdated    time.Time      `json:"lastUpdated"`
+	Status         string         `json:"status" gorm:"not null;default:'pending'"`
+	SubmissionDate time.Time      `json:"submission_ate" gorm:"not null"`
+	LastUpdated    time.Time      `json:"last_updated" gorm:"not null"`
 	Notes          *string        `json:"notes,omitempty"`
 	CreatedAt      time.Time      `json:"-"`
 	UpdatedAt      time.Time      `json:"-"`
 	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (j *Job) BeforeCreate(tx *gorm.DB) {
+func (j *Job) BeforeCreate(tx *gorm.DB) error {
 	now := time.Now()
 	j.PostedDate = now
 	j.CreatedAt = now
 	j.UpdatedAt = now
+	return nil
 }
 
-func (a *JobApplication) BeforeCreate(tx *gorm.DB) {
+func (j *Job) BeforeUpdate(tx *gorm.DB) error {
+	j.UpdatedAt = time.Now()
+	return nil
+}
+
+func (a *JobApplication) BeforeCreate(tx *gorm.DB) error {
 	now := time.Now()
+	if a.Status == "" {
+		a.Status = "pending"
+	}
 	a.SubmissionDate = now
+	a.LastUpdated = now
 	a.CreatedAt = now
 	a.UpdatedAt = now
-
-	a.Status = "pending"
+	return nil
 }
 
-func (j *Job) AfterUpdate(tx *gorm.DB) {
-	now := time.Now()
-	j.UpdatedAt = now
-}
-
-func (a *JobApplication) AfterUpdate(tx *gorm.DB) {
+func (a *JobApplication) BeforeUpdate(tx *gorm.DB) error {
 	now := time.Now()
 	a.LastUpdated = now
 	a.UpdatedAt = now
+	return nil
 }

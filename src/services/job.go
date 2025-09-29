@@ -55,7 +55,7 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		Salary:         payload.Salary,
 		IsRemote:       payload.IsRemote,
 		EmploymentType: payload.EmploymentType,
-		CreatedBy:      user.ID.String(),
+		CreatedBy:      user.ID,
 	}
 
 	if err := s.database.Create(&job).Error; err != nil {
@@ -224,8 +224,8 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	}
 
 	application := &models.JobApplication{
-		JobID:       jobId,
-		ApplicantID: userId,
+		JobID:       job.ID,
+		ApplicantID: user.ID,
 		Resume:      "",
 		CoverLetter: &payload.CoverLetter,
 		Notes:       payload.Notes,

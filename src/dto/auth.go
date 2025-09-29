@@ -28,12 +28,12 @@ type UpdateUserDto struct {
 }
 
 type ChangePasswordDto struct {
-	CurrentPassword string `json:"currentPassword"`
-	NewPassword     string `json:"newPassword"`
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
 }
 
 type ResetPasswordDto struct {
-	CurrentPassword string `json:"currentPassword"`
-	NewPassword     string `json:"newPassword"`
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
 	Token           string `json:"token"`
 }

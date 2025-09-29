@@ -19,3 +19,6 @@ func AuthRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 
 	return auth
 }
+
+// https://foglio.onrender.com/api/v2/auth/github/callback
+// https://foglio.onrender.com/api/v2/auth/github/webhook

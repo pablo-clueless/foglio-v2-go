@@ -13,8 +13,8 @@ type CreateJobDto struct {
 	Requirements   []string       `json:"requirements" gorm:"serializer:json"`
 	Salary         *models.Salary `json:"salary,omitempty" gorm:"embedded;embeddedPrefix:salary_"`
 	Deadline       *time.Time     `json:"deadline,omitempty"`
-	IsRemote       bool           `json:"isRemote"`
-	EmploymentType string         `json:"employmentType"`
+	IsRemote       bool           `json:"is_remote"`
+	EmploymentType string         `json:"employment_type"`
 }
 
 type UpdateJobDto struct {
@@ -23,8 +23,8 @@ type UpdateJobDto struct {
 	Requirements   []string       `json:"requirements" gorm:"serializer:json"`
 	Salary         *models.Salary `json:"salary,omitempty" gorm:"embedded;embeddedPrefix:salary_"`
 	Deadline       *time.Time     `json:"deadline,omitempty"`
-	IsRemote       bool           `json:"isRemote"`
-	EmploymentType string         `json:"employmentType"`
+	IsRemote       bool           `json:"is_remote"`
+	EmploymentType string         `json:"employment_type"`
 }
 
 type JobApplicationDto struct {
@@ -34,4 +34,16 @@ type JobApplicationDto struct {
 	SubmissionDate time.Time `json:"submissionDate"`
 	LastUpdated    time.Time `json:"lastUpdated"`
 	Notes          *string   `json:"notes,omitempty"`
+}
+
+type JobSearch struct {
+	Keywords       []string `json:"keywords,omitempty"`
+	Location       *string  `json:"location,omitempty"`
+	EmploymentType []string `json:"employment_type,omitempty"`
+	SalaryMin      *int64   `json:"salary_min,omitempty"`
+	SalaryMax      *int64   `json:"salary_max,omitempty"`
+	IsRemote       *bool    `json:"is_remote,omitempty"`
+	SortBy         *string  `json:"sortBy,omitempty"`
+	Page           *int     `json:"page,omitempty"`
+	Limit          *int     `json:"limit,omitempty"`
 }

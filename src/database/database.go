@@ -4,10 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"foglio/v2/src/config"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
+
+	"foglio/v2/src/config"
+	"foglio/v2/src/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -15,9 +20,8 @@ import (
 )
 
 var (
-	client *gorm.DB
-	once   sync.Once
-
+	client                    *gorm.DB
+	once                      sync.Once
 	ErrDatabaseNotInitialized = errors.New("database not initialized")
 )
 
@@ -27,11 +31,11 @@ const (
 	connMaxLifetime = 5 * time.Minute
 	connMaxIdleTime = 30 * time.Second
 	pingTimeout     = 5 * time.Second
+	migrationsDir   = "./database/migrations"
 )
 
 func InitializeDatabase() error {
 	var initErr error
-
 	once.Do(func() {
 		url := config.AppConfig.PostgresUrl
 		if url == "" {
@@ -105,7 +109,6 @@ func HealthCheck() error {
 	if client == nil {
 		return ErrDatabaseNotInitialized
 	}
-
 	return PingDatabase(client)
 }
 
@@ -139,8 +142,74 @@ func EnableUUIDExtension(db *gorm.DB) error {
 }
 
 func runMigrations(db *gorm.DB) error {
-	modelsToMigrate := []interface{}{}
-	return db.AutoMigrate(modelsToMigrate...)
+	if err := os.MkdirAll(migrationsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create migrations directory: %w", err)
+	}
+
+	migrations := []struct {
+		name  string
+		model interface{}
+	}{
+		{"001_create_companies", &models.Company{}},
+		{"002_create_users", &models.User{}},
+		{"003_create_skills", &models.Skill{}},
+		{"004_create_languages", &models.Language{}},
+		{"005_create_certifications", &models.Certification{}},
+		{"006_create_education", &models.Education{}},
+		{"007_create_education_highlights", &models.EducationHighlight{}},
+		{"008_create_experiences", &models.Experience{}},
+		{"009_create_experience_highlights", &models.ExperienceHighlight{}},
+		{"010_create_experience_tech", &models.ExperienceTech{}},
+		{"011_create_projects", &models.Project{}},
+		{"012_create_project_stacks", &models.ProjectStack{}},
+		{"013_create_project_highlights", &models.ProjectHighlight{}},
+		{"014_create_jobs", &models.Job{}},
+		{"015_create_job_applications", &models.JobApplication{}},
+	}
+
+	for _, migration := range migrations {
+		log.Printf("Running migration: %s", migration.name)
+
+		if err := db.AutoMigrate(migration.model); err != nil {
+			return fmt.Errorf("migration %s failed: %w", migration.name, err)
+		}
+
+		if err := SaveMigrationSQL(db, migration.name, migration.model); err != nil {
+			log.Printf("Warning: Failed to save migration SQL for %s: %v", migration.name, err)
+		}
+
+		log.Printf("Migration %s completed successfully", migration.name)
+	}
+
+	return nil
+}
+
+func SaveMigrationSQL(db *gorm.DB, name string, model interface{}) error {
+	_ = db.Migrator().CreateTable(model)
+
+	sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Session(&gorm.Session{})
+	})
+
+	if sql == "" {
+		return nil
+	}
+
+	timestamp := time.Now().Format("20060102150405")
+	filename := filepath.Join(migrationsDir, fmt.Sprintf("%s_%s.sql", timestamp, name))
+
+	content := fmt.Sprintf("-- Migration: %s\n-- Generated at: %s\n\n%s;\n",
+		name,
+		time.Now().Format(time.RFC3339),
+		sql,
+	)
+
+	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+		return err
+	}
+
+	log.Printf("Migration SQL saved to: %s", filename)
+	return nil
 }
 
 func PingDatabase(db *gorm.DB) error {

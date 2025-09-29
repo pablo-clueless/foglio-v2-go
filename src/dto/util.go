@@ -18,10 +18,10 @@ type JobPagination struct {
 	Company        string `json:"company"`
 	Location       string `json:"location"`
 	Salary         string `json:"salary"`
-	PostedDate     string `json:"postedDate"`
-	EmploymentType string `json:"employmentType"`
+	PostedDate     string `json:"posted_date"`
+	EmploymentType string `json:"employment_type"`
 	Requirement    string `json:"requirement"`
-	IsRemote       bool   `json:"isRemote"`
+	IsRemote       bool   `json:"is_remote"`
 }
 
 type PaginatedResponse[T any] struct {
