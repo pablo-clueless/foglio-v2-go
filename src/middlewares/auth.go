@@ -5,6 +5,7 @@ import (
 	"foglio/v2/src/database"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/services"
+	"log"
 	"net/http"
 	"strings"
 
@@ -15,14 +16,37 @@ const (
 	bearerPrefix = "Bearer "
 )
 
-func isOpenRoute(route, method string) bool {
+func isOpenRoute(path, method string) bool {
 	for _, openRoute := range config.AppConfig.NonAuthRoutes {
-		if openRoute.Endpoint == route && openRoute.Method == method {
+		if matchRoute(openRoute.Endpoint, path) && openRoute.Method == method {
 			return true
 		}
 	}
-
 	return false
+}
+
+func matchRoute(pattern, path string) bool {
+	if pattern == path {
+		return true
+	}
+
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+	pathParts := strings.Split(strings.Trim(path, "/"), "/")
+
+	if len(patternParts) != len(pathParts) {
+		return false
+	}
+
+	for i := range patternParts {
+		if strings.HasPrefix(patternParts[i], ":") {
+			continue
+		}
+		if patternParts[i] != pathParts[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func extractBearerToken(authHeader string) (string, bool) {
@@ -38,9 +62,11 @@ func AuthMiddleware() gin.HandlerFunc {
 	authService := services.NewAuthService(database.GetDatabase())
 
 	return func(ctx *gin.Context) {
-		route := ctx.FullPath()
+		path := ctx.Request.URL.Path
 		method := ctx.Request.Method
-		if isOpenRoute(route, method) {
+		log.Println("here is your request:", path, method)
+
+		if isOpenRoute(path, method) {
 			ctx.Next()
 			return
 		}
@@ -69,7 +95,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		ctx.Set(config.AppConfig.CurrentUser, user)
 		ctx.Set(config.AppConfig.CurrentUserId, user.ID.String())
-
 		ctx.Next()
 	}
 }

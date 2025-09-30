@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -31,7 +29,6 @@ const (
 	connMaxLifetime = 5 * time.Minute
 	connMaxIdleTime = 30 * time.Second
 	pingTimeout     = 5 * time.Second
-	migrationsDir   = "./database/migrations"
 )
 
 func InitializeDatabase() error {
@@ -62,10 +59,12 @@ func InitializeDatabase() error {
 			return
 		}
 
-		if err := runMigrations(database); err != nil {
-			log.Printf("Failed to run migrations: %v", err)
-			initErr = err
-			return
+		if !config.AppConfig.IsDevMode {
+			if err := runMigrations(database); err != nil {
+				log.Printf("Failed to run migrations: %v", err)
+				initErr = err
+				return
+			}
 		}
 
 		if err := PingDatabase(database); err != nil {
@@ -142,10 +141,6 @@ func EnableUUIDExtension(db *gorm.DB) error {
 }
 
 func runMigrations(db *gorm.DB) error {
-	if err := os.MkdirAll(migrationsDir, 0755); err != nil {
-		return fmt.Errorf("failed to create migrations directory: %w", err)
-	}
-
 	migrations := []struct {
 		name  string
 		model interface{}
@@ -174,41 +169,9 @@ func runMigrations(db *gorm.DB) error {
 			return fmt.Errorf("migration %s failed: %w", migration.name, err)
 		}
 
-		if err := SaveMigrationSQL(db, migration.name, migration.model); err != nil {
-			log.Printf("Warning: Failed to save migration SQL for %s: %v", migration.name, err)
-		}
-
 		log.Printf("Migration %s completed successfully", migration.name)
 	}
 
-	return nil
-}
-
-func SaveMigrationSQL(db *gorm.DB, name string, model interface{}) error {
-	_ = db.Migrator().CreateTable(model)
-
-	sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
-		return tx.Session(&gorm.Session{})
-	})
-
-	if sql == "" {
-		return nil
-	}
-
-	timestamp := time.Now().Format("20060102150405")
-	filename := filepath.Join(migrationsDir, fmt.Sprintf("%s_%s.sql", timestamp, name))
-
-	content := fmt.Sprintf("-- Migration: %s\n-- Generated at: %s\n\n%s;\n",
-		name,
-		time.Now().Format(time.RFC3339),
-		sql,
-	)
-
-	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
-		return err
-	}
-
-	log.Printf("Migration SQL saved to: %s", filename)
 	return nil
 }
 

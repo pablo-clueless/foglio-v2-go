@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"foglio/v2/src/config"
 	"foglio/v2/src/database"
+	"foglio/v2/src/docs"
+	"foglio/v2/src/handlers"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/middlewares"
 	"foglio/v2/src/routes"
@@ -40,10 +42,14 @@ func main() {
 	}
 
 	app := gin.Default()
+
+	docs.SetupSwagger(app)
+
 	app.Use(gin.Logger())
 	app.Use(cors.New(corsConfig))
 	app.Use(middlewares.ErrorHandlerMiddleware())
 	app.Use(middlewares.AuthMiddleware())
+	app.Use(middlewares.RateLimiterMiddleware())
 	app.Use(lib.ErrorHandler())
 
 	app.MaxMultipartMemory = 10 << 20 // 10
@@ -56,6 +62,12 @@ func main() {
 	prefix := config.AppConfig.Version
 	router := app.Group(prefix)
 
+	router.GET("/", func(ctx *gin.Context) {
+		lib.Success(ctx, "", map[string]interface{}{})
+	})
+	router.GET("/favicon.ico", func(ctx *gin.Context) {
+		handlers.SendFile(ctx, "/favicon.ico")
+	})
 	router.GET("/ws", websocket.HandleWebSocket)
 	router.GET("/health", func(ctx *gin.Context) {
 		lib.Success(ctx, "Foglio API is healthy", map[string]interface{}{
@@ -63,6 +75,7 @@ func main() {
 			"status":  200,
 		})
 	})
+	router.GET("/swagger/*any", func(ctx *gin.Context) {})
 
 	routes.AuthRoutes(router)
 	routes.UserRoutes(router)

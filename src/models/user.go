@@ -26,6 +26,7 @@ type User struct {
 	Certifications []Certification `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,omitempty"`
 	Languages      []Language      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,omitempty"`
 	IsRecruiter    bool            `json:"is_recruiter"`
+	IsPremium      bool            `json:"is_premium"`
 	CreatedAt      time.Time       `json:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"`
 	DeletedAt      gorm.DeletedAt  `gorm:"index" json:"-"`

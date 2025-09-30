@@ -1,0 +1,243 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Datarango  Api Gateway",
+    "contact": {}
+  },
+  "paths": {
+    "/api/v2/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service is healthy"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/signup": {
+      "post": {
+        "summary": "User signup",
+        "responses": {
+          "200": {
+            "description": "User created successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/signin": {
+      "post": {
+        "summary": "User signin",
+        "responses": {
+          "200": {
+            "description": "User authenticated successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/verification": {
+      "post": {
+        "summary": "User verification",
+        "responses": {
+          "200": {
+            "description": "User verified successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/update-password": {
+      "post": {
+        "summary": "Update user password",
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/forgot-password": {
+      "post": {
+        "summary": "Forgot password",
+        "responses": {
+          "200": {
+            "description": "Password reset email sent"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/reset-password": {
+      "post": {
+        "summary": "Reset password",
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/users/": {
+      "get": {
+        "summary": "Get all users",
+        "responses": {
+          "200": {
+            "description": "List of users"
+          }
+        }
+      }
+    },
+    "/api/v2/users/{id}": {
+      "get": {
+        "summary": "Get user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/users/{id}/avatar": {
+      "put": {
+        "summary": "Update user avatar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Avatar updated successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/jobs/": {
+      "post": {
+        "summary": "Create a new job",
+        "responses": {
+          "200": {
+            "description": "Job created successfully"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all jobs",
+        "responses": {
+          "200": {
+            "description": "List of jobs"
+          }
+        }
+      }
+    },
+    "/api/v2/jobs/{id}": {
+      "get": {
+        "summary": "Get job by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job details"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update job by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete job by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v2/jobs/{id}/apply": {
+      "post": {
+        "summary": "Apply to job",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Application submitted successfully"
+          }
+        }
+      }
+    }
+  }
+}
