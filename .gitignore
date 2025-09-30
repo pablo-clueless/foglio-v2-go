@@ -21,7 +21,8 @@
 go.work
 
 # Environment configuration
-.env
+.env*
+.env.*
 .env.local
 tmp
 .vscode
