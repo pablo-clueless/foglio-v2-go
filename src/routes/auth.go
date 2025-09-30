@@ -16,6 +16,8 @@ func AuthRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	auth.POST("/update-password", handler.ChangePassword())
 	auth.POST("/forgot-password", handler.ForgotPassword())
 	auth.POST("/reset-password", handler.ResetPassword())
+	auth.GET("/:provider", handler.GetOAuthURL())
+	auth.GET("/:provider/callback", handler.HandleOAuthCallback())
 
 	return auth
 }

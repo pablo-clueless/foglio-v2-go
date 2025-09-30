@@ -1,10 +1,16 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"foglio/v2/src/config"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/models"
+	"net/http"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -17,6 +23,44 @@ func NewAuthService(database *gorm.DB) *AuthService {
 	return &AuthService{
 		database: database,
 	}
+}
+
+type OAuthConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+	AuthURL      string
+	TokenURL     string
+	UserInfoURL  string
+}
+
+func (s *AuthService) getGoogleOAuthConfig() OAuthConfig {
+	return OAuthConfig{
+		ClientID:     config.AppConfig.GoogleClientId,
+		ClientSecret: config.AppConfig.GoogleClientSecret,
+		RedirectURL:  config.AppConfig.GoogleRedirectUrl,
+		AuthURL:      "https://accounts.google.com/o/oauth2/auth",
+		TokenURL:     "https://oauth2.googleapis.com/token",
+		UserInfoURL:  "https://www.googleapis.com/oauth2/v3/userinfo",
+	}
+}
+
+func (s *AuthService) getGitHubOAuthConfig() OAuthConfig {
+	return OAuthConfig{
+		ClientID:     config.AppConfig.GithubClientId,
+		ClientSecret: config.AppConfig.GithubClientSecret,
+		RedirectURL:  config.AppConfig.GithubRedirectUrl,
+		AuthURL:      "https://github.com/login/oauth/authorize",
+		TokenURL:     "https://github.com/login/oauth/access_token",
+		UserInfoURL:  "https://api.github.com/user",
+	}
+}
+
+type OAuthTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 type SigninResponse struct {
@@ -294,4 +338,262 @@ func (s *AuthService) FindUserByOtp(otp string) (models.User, error) {
 	return user, nil
 }
 
-func (s *AuthService) OAuthSignin() {}
+func (s *AuthService) GetOAuthURL(provider string) (string, error) {
+	var config OAuthConfig
+	var scope string
+
+	switch provider {
+	case "google":
+		config = s.getGoogleOAuthConfig()
+		scope = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email"
+	case "github":
+		config = s.getGitHubOAuthConfig()
+		scope = "user:email"
+	default:
+		return "", errors.New("unsupported OAuth provider")
+	}
+
+	state := lib.GenerateRandomString(32)
+
+	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
+		config.AuthURL,
+		config.ClientID,
+		config.RedirectURL,
+		scope,
+		state,
+	)
+
+	return authURL, nil
+}
+
+func (s *AuthService) HandleOAuthCallback(provider string, payload dto.OAuthCallbackDto) (*SigninResponse, error) {
+	accessToken, err := s.exchangeCodeForToken(provider, payload.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	oauthUser, err := s.getUserInfo(provider, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.findOrCreateOAuthUser(oauthUser)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := lib.GenerateToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+	user.Otp = ""
+
+	return &SigninResponse{
+		User:  *user,
+		Token: token,
+	}, nil
+}
+
+func (s *AuthService) exchangeCodeForToken(provider string, code string) (string, error) {
+	var config OAuthConfig
+	switch provider {
+	case "google":
+		config = s.getGoogleOAuthConfig()
+	case "github":
+		config = s.getGitHubOAuthConfig()
+	default:
+		return "", errors.New("unsupported OAuth provider")
+	}
+
+	body := strings.NewReader(fmt.Sprintf(
+		"client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s",
+		config.ClientID,
+		config.ClientSecret,
+		code,
+		config.RedirectURL,
+	))
+
+	req, err := http.NewRequest("POST", config.TokenURL, body)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var tokenResp OAuthTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return "", err
+	}
+
+	if tokenResp.AccessToken == "" {
+		return "", errors.New("failed to get access token")
+	}
+
+	return tokenResp.AccessToken, nil
+}
+
+func (s *AuthService) getUserInfo(provider string, accessToken string) (*dto.OAuthUserDto, error) {
+	var config OAuthConfig
+	switch provider {
+	case "google":
+		config = s.getGoogleOAuthConfig()
+	case "github":
+		config = s.getGitHubOAuthConfig()
+	default:
+		return nil, errors.New("unsupported OAuth provider")
+	}
+
+	req, err := http.NewRequest("GET", config.UserInfoURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var oauthUser dto.OAuthUserDto
+	oauthUser.Provider = provider
+
+	switch provider {
+	case "google":
+		var googleUser struct {
+			Sub     string `json:"sub"`
+			Email   string `json:"email"`
+			Name    string `json:"name"`
+			Picture string `json:"picture"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
+			return nil, err
+		}
+		oauthUser.ID = googleUser.Sub
+		oauthUser.Email = googleUser.Email
+		oauthUser.Name = googleUser.Name
+		oauthUser.Avatar = googleUser.Picture
+
+	case "github":
+		var githubUser struct {
+			ID        int    `json:"id"`
+			Email     string `json:"email"`
+			Name      string `json:"name"`
+			AvatarURL string `json:"avatar_url"`
+			Login     string `json:"login"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&githubUser); err != nil {
+			return nil, err
+		}
+		oauthUser.ID = fmt.Sprintf("%d", githubUser.ID)
+		oauthUser.Email = githubUser.Email
+		oauthUser.Name = githubUser.Name
+		oauthUser.Avatar = githubUser.AvatarURL
+
+		if oauthUser.Email == "" {
+			email, err := s.getGitHubPrimaryEmail(accessToken)
+			if err == nil && email != "" {
+				oauthUser.Email = email
+			}
+		}
+
+		if oauthUser.Name == "" {
+			oauthUser.Name = githubUser.Login
+		}
+	}
+
+	if oauthUser.Email == "" {
+		return nil, errors.New("could not get user email from OAuth provider")
+	}
+
+	return &oauthUser, nil
+}
+
+func (s *AuthService) getGitHubPrimaryEmail(accessToken string) (string, error) {
+	req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var emails []struct {
+		Email    string `json:"email"`
+		Primary  bool   `json:"primary"`
+		Verified bool   `json:"verified"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
+		return "", err
+	}
+
+	for _, email := range emails {
+		if email.Primary && email.Verified {
+			return email.Email, nil
+		}
+	}
+
+	return "", errors.New("no primary email found")
+}
+
+func (s *AuthService) findOrCreateOAuthUser(oauthUser *dto.OAuthUserDto) (*models.User, error) {
+	var user models.User
+
+	err := s.database.Where("provider = ? AND provider_id = ?", oauthUser.Provider, oauthUser.ID).First(&user).Error
+	if err == nil {
+		return &user, nil
+	}
+
+	err = s.database.Where("email = ?", oauthUser.Email).First(&user).Error
+	if err == nil {
+		user.Provider = oauthUser.Provider
+		user.ProviderID = oauthUser.ID
+		if user.Image == nil || *user.Image == "" {
+			user.Image = &oauthUser.Avatar
+		}
+		if err := s.database.Save(&user).Error; err != nil {
+			return nil, err
+		}
+		return &user, nil
+	}
+
+	user = models.User{
+		Name:       oauthUser.Name,
+		Email:      oauthUser.Email,
+		Username:   lib.GenerateUsername(oauthUser.Name),
+		Provider:   oauthUser.Provider,
+		ProviderID: oauthUser.ID,
+		Verified:   true,
+	}
+
+	if oauthUser.Avatar != "" {
+		user.Image = &oauthUser.Avatar
+	}
+
+	if err := s.database.Create(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

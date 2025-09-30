@@ -25,7 +25,7 @@ type JobPagination struct {
 }
 
 type PaginatedResponse[T any] struct {
-	Data       []T `json:"items"`
+	Data       []T `json:"data"`
 	Limit      int `json:"limit"`
 	Page       int `json:"page"`
 	TotalItems int `json:"total_items"`

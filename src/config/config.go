@@ -27,8 +27,11 @@ type Config struct {
 	CurrentUserId        string
 	GithubClientId       string
 	GithubClientSecret   string
+	GithubPrivateKey     string
+	GithubRedirectUrl    string
 	GoogleClientId       string
 	GoogleClientSecret   string
+	GoogleRedirectUrl    string
 	IsDevMode            bool
 	JWTTokenSecret       []byte
 	MaxFileSize          int
@@ -61,8 +64,11 @@ func InitializeConfig() {
 		CurrentUser:          "CURRENT USER",
 		GithubClientId:       os.Getenv("GITHUB_CLIENT_ID"),
 		GithubClientSecret:   os.Getenv("GITHUB_CLIENT_SECRET"),
+		GithubPrivateKey:     os.Getenv("GITHUB_CLIENT_PRIVATE_KEY"),
+		GithubRedirectUrl:    os.Getenv("GITHUB_REDIRECT_URL"),
 		GoogleClientId:       os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret:   os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectUrl:    os.Getenv("GOOGLE_REDIRECT_URL"),
 		IsDevMode:            os.Getenv("GO_ENV") == "development",
 		JWTTokenSecret:       []byte(os.Getenv("JWT_TOKEN_SECRET")),
 		MaxFileSize:          10 << 20, // default 10 MB

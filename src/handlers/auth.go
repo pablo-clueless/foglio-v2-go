@@ -141,3 +141,37 @@ func (h *AuthHandler) ResetPassword() gin.HandlerFunc {
 		lib.Success(ctx, "Password reset successfully", nil)
 	}
 }
+
+func (h *AuthHandler) GetOAuthURL() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		provider := ctx.Param("provider")
+
+		url, err := h.service.GetOAuthURL(provider)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "OAuth URL generated successfully", url)
+	}
+}
+
+func (h *AuthHandler) HandleOAuthCallback() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		provider := ctx.Param("provider")
+		var payload dto.OAuthCallbackDto
+
+		if err := ctx.ShouldBindQuery(&payload); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		response, err := h.service.HandleOAuthCallback(provider, payload)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error, "+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "", response)
+	}
+}

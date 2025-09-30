@@ -12,7 +12,9 @@ type User struct {
 	Name           string          `gorm:"not null" json:"name"`
 	Username       string          `gorm:"not null" json:"username"`
 	Email          string          `gorm:"uniqueIndex;not null" json:"email"`
-	Password       string          `json:"password"`
+	Password       string          `gorm:"null" json:"-"`                   // Nullable for OAuth users
+	Provider       string          `gorm:"default:'local'" json:"provider"` // local, google, github
+	ProviderID     string          `gorm:"null" json:"-"`                   // Provider's user ID
 	Phone          *string         `json:"phone,omitempty"`
 	Headline       *string         `json:"headline,omitempty"`
 	Location       *string         `json:"location,omitempty"`

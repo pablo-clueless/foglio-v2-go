@@ -2,6 +2,19 @@ package dto
 
 import "foglio/v2/src/models"
 
+type OAuthCallbackDto struct {
+	Code  string `json:"code" form:"code"`
+	State string `json:"state" form:"state"`
+}
+
+type OAuthUserDto struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Avatar   string `json:"avatar"`
+	Provider string `json:"provider"`
+}
+
 type SigninDto struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
