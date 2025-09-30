@@ -2,6 +2,7 @@ package config
 
 import (
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -74,6 +75,19 @@ func InitializeConfig() {
 		SmtpPassword:         os.Getenv("SMTP_PASSWORD"),
 		Version:              os.Getenv("VERSION"),
 		AllowMethods:         []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		NonAuthRoutes:        []APIRoute{},
+		NonAuthRoutes: []APIRoute{
+			{Endpoint: "/", Method: http.MethodGet},
+			{Endpoint: "/ws", Method: http.MethodGet},
+			{Endpoint: "/health", Method: http.MethodGet},
+			{Endpoint: "/auth/signup", Method: http.MethodPost},
+			{Endpoint: "/auth/signin", Method: http.MethodPost},
+			{Endpoint: "/auth/verification", Method: http.MethodPost},
+			{Endpoint: "/auth/forgot-password", Method: http.MethodPost},
+			{Endpoint: "/auth/reset-password", Method: http.MethodPost},
+			{Endpoint: "/users", Method: http.MethodGet},
+			{Endpoint: "/users/:id", Method: http.MethodGet},
+			{Endpoint: "/jobs", Method: http.MethodGet},
+			{Endpoint: "/jobs/:id", Method: http.MethodGet},
+		},
 	}
 }
