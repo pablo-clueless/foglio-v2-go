@@ -65,7 +65,7 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 
 	offset := (q.Page - 1) * q.Limit
 
-	if err := query.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Offset(offset).Order("createdAt DESC").Limit(q.Limit).
+	if err := query.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Offset(offset).Order("created_at DESC").Limit(q.Limit).
 		Find(&users).Error; err != nil {
 		return nil, err
 	}

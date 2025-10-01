@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"foglio/v2/src/config"
 	"foglio/v2/src/database"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
+	"foglio/v2/src/models"
 	"foglio/v2/src/services"
 
 	"github.com/gin-gonic/gin"
@@ -88,7 +90,27 @@ func (h *JobHandler) GetJobs() gin.HandlerFunc {
 			return
 		}
 
-		lib.Success(ctx, "Users fetched successfully", jobs)
+		lib.Success(ctx, "Jobs fetched successfully", jobs)
+	}
+}
+
+func (h *JobHandler) GetJobsByUser() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		var query dto.Pagination
+
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		jobs, err := h.service.GetJobsByUser(id, query)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Jobs fetched successfully", jobs)
 	}
 }
 
@@ -123,6 +145,136 @@ func (h *JobHandler) ApplyToJob() gin.HandlerFunc {
 			return
 		}
 
-		lib.Success(ctx, "Job application success", nil)
+		lib.Success(ctx, "Job application successful", nil)
+	}
+}
+
+func (h *JobHandler) GetApplicationsByJob() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		jobId := ctx.Param("id")
+		var query dto.Pagination
+
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		applications, err := h.service.GetApplicationsByJob(id, jobId, query)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Applications fetched successfully", applications)
+	}
+}
+
+func (h *JobHandler) AcceptApplication() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		applicationId := ctx.Param("id")
+		var reason string
+
+		if err := ctx.ShouldBindQuery(&reason); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		application, err := h.service.AcceptApplication(id, applicationId, &reason)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Application accepted successfully", application)
+	}
+}
+
+func (h *JobHandler) RejectApplication() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		applicationId := ctx.Param("id")
+		var reason string
+
+		if err := ctx.ShouldBindQuery(&reason); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		application, err := h.service.AcceptApplication(id, applicationId, &reason)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Application rejected successfully", application)
+	}
+}
+
+func (h *JobHandler) AddComment() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		jobId := ctx.Param("id")
+		var comment string
+
+		if err := ctx.ShouldBind(&comment); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		created, err := h.service.AddComment(id, jobId, comment)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Comment added successfully", created)
+	}
+}
+
+func (h *JobHandler) DeleteComment() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		commentId := ctx.Param("id")
+
+		err := h.service.DeleteComment(commentId, id)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Comment deleted successfully", nil)
+	}
+}
+
+func (h *JobHandler) AddReaction() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		jobId := ctx.Param("id")
+		reactionType := ctx.Param("reaction")
+
+		reaction, err := h.service.AddReaction(id, jobId, models.ReactionType(reactionType))
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Reaction added successfully", reaction)
+	}
+}
+
+func (h *JobHandler) RemoveReaction() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		jobId := ctx.Param("id")
+
+		err := h.service.RemoveReaction(id, jobId)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Reaction removed successfully", nil)
 	}
 }

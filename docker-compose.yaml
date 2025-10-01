@@ -1,22 +1,6 @@
 services:
-  postgresql:
-    build:
-      context: .
-      dockerfile: Dockerfile.postgres
-    restart: always
-    ports:
-      - "5433:5432"  # Changed to avoid conflicts
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 1s
-      retries: 20
-    networks:
-      - foglio_network
   foglio:
-    image: cosmtrek/air
-    working_dir: /foglio/
+    container_name: foglio
     ports:
       - "8080:8080"
     env_file:

@@ -490,7 +490,7 @@ const template = `{
                         "description": "Page number"
                     },
                     {
-                        "name": "limit",
+                        "name": "size",
                         "in": "query",
                         "type": "integer",
                         "description": "Items per page"
@@ -499,6 +499,23 @@ const template = `{
                 "responses": {
                     "200": {
                         "description": "List of jobs"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/me": {
+            "get": {
+                "summary": "List my jobs",
+                "description": "Get all jobs created by XXX authenticated user",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "List of user's jobs"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -628,10 +645,129 @@ const template = `{
                     }
                 }
             }
+        },
+        "/api/v2/notifications": {
+            "get": {
+                "summary": "Get notifications",
+                "description": "Get all notification",
+                "tags": ["Notifications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ]
+            }
+        },
+        "/api/v2/notifications/{id}": {
+            "get": {
+                "summary": "Get notification",
+                "description": "Get notification by ID",
+                "tags": ["Notifications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Notification UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update notification",
+                "description": "Mark notification as read",
+                "tags": ["Notifications"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Notification UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "isRead": {
+                                    "type": "boolean",
+                                    "example": true
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete notification",
+                "description": "Delete notification by ID",
+                "tags": ["Notifications"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Notification UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                }
+            }
         }
     }
-}
-`
+}`
 
 var SwaggerInfo = &swag.Spec{
 	Version:          "",

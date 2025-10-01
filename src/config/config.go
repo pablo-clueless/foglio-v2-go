@@ -15,7 +15,6 @@ type APIRoute struct {
 
 type Config struct {
 	AccessTokenExpiresIn time.Duration
-	AllowMethods         []string
 	AppEmail             string
 	ApiUrl               string
 	ClientUrl            string
@@ -60,8 +59,8 @@ func InitializeConfig() {
 		CloudinaryName:       os.Getenv("CLOUDINARY_NAME"),
 		CloudinarySecret:     os.Getenv("CLOUDINARY_SECRET"),
 		CookieDomain:         os.Getenv("COOKIE_DOMAIN"),
-		CurrentUserId:        "CURRENT USER ID",
-		CurrentUser:          "CURRENT USER",
+		CurrentUserId:        "CURRENT_USER_ID",
+		CurrentUser:          "CURRENT_USER",
 		GithubClientId:       os.Getenv("GITHUB_CLIENT_ID"),
 		GithubClientSecret:   os.Getenv("GITHUB_CLIENT_SECRET"),
 		GithubPrivateKey:     os.Getenv("GITHUB_CLIENT_PRIVATE_KEY"),
@@ -80,10 +79,12 @@ func InitializeConfig() {
 		SmtpUser:             os.Getenv("SMTP_USER"),
 		SmtpPassword:         os.Getenv("SMTP_PASSWORD"),
 		Version:              os.Getenv("VERSION"),
-		AllowMethods:         []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		NonAuthRoutes: []APIRoute{
-			{Endpoint: "/favicon.ico", Method: http.MethodGet},
-			{Endpoint: "api/v2/", Method: http.MethodGet},
+			{Endpoint: "/public/*", Method: "*"},
+			{Endpoint: "/swagger/*", Method: "*"},
+			{Endpoint: "/docs", Method: http.MethodGet},
+			{Endpoint: "/", Method: http.MethodGet},
+			{Endpoint: "api/v2", Method: http.MethodGet},
 			{Endpoint: "api/v2/ws", Method: http.MethodGet},
 			{Endpoint: "api/v2/health", Method: http.MethodGet},
 			{Endpoint: "api/v2/auth/signup", Method: http.MethodPost},
@@ -91,6 +92,10 @@ func InitializeConfig() {
 			{Endpoint: "api/v2/auth/verification", Method: http.MethodPost},
 			{Endpoint: "api/v2/auth/forgot-password", Method: http.MethodPost},
 			{Endpoint: "api/v2/auth/reset-password", Method: http.MethodPost},
+			{Endpoint: "api/v2/auth/github", Method: http.MethodGet},
+			{Endpoint: "api/v2/auth/github/callback", Method: http.MethodGet},
+			{Endpoint: "api/v2/auth/google", Method: http.MethodGet},
+			{Endpoint: "api/v2/auth/google/callback", Method: http.MethodGet},
 			{Endpoint: "api/v2/users", Method: http.MethodGet},
 			{Endpoint: "api/v2/users/:id", Method: http.MethodGet},
 			{Endpoint: "api/v2/jobs", Method: http.MethodGet},

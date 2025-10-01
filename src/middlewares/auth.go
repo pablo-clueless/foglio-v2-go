@@ -5,7 +5,6 @@ import (
 	"foglio/v2/src/database"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/services"
-	"log"
 	"net/http"
 	"strings"
 
@@ -17,8 +16,9 @@ const (
 )
 
 func isOpenRoute(path, method string) bool {
+	path = strings.TrimSuffix(path, "/")
 	for _, openRoute := range config.AppConfig.NonAuthRoutes {
-		if matchRoute(openRoute.Endpoint, path) && openRoute.Method == method {
+		if (openRoute.Method == "*" || openRoute.Method == method) && matchRoute(openRoute.Endpoint, path) {
 			return true
 		}
 	}
@@ -26,8 +26,17 @@ func isOpenRoute(path, method string) bool {
 }
 
 func matchRoute(pattern, path string) bool {
+	pattern = strings.TrimSuffix(pattern, "/")
+	path = strings.TrimSuffix(path, "/")
+
 	if pattern == path {
 		return true
+	}
+
+	if strings.HasSuffix(pattern, "/*") {
+		prefix := strings.TrimSuffix(pattern, "/*")
+		prefix = strings.TrimSuffix(prefix, "/")
+		return strings.HasPrefix(path, prefix)
 	}
 
 	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
@@ -38,6 +47,9 @@ func matchRoute(pattern, path string) bool {
 	}
 
 	for i := range patternParts {
+		if patternParts[i] == "*" {
+			continue
+		}
 		if strings.HasPrefix(patternParts[i], ":") {
 			continue
 		}
@@ -50,9 +62,14 @@ func matchRoute(pattern, path string) bool {
 }
 
 func extractBearerToken(authHeader string) (string, bool) {
+	if authHeader == "" {
+		return "", false
+	}
+
 	if !strings.HasPrefix(authHeader, bearerPrefix) {
 		return "", false
 	}
+
 	token := strings.TrimPrefix(authHeader, bearerPrefix)
 	trimmedToken := strings.TrimSpace(token)
 	return trimmedToken, trimmedToken != ""
@@ -64,7 +81,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		path := ctx.Request.URL.Path
 		method := ctx.Request.Method
-		log.Println("here is your request:", path, method)
 
 		if isOpenRoute(path, method) {
 			ctx.Next()

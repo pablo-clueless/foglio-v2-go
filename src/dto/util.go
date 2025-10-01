@@ -21,7 +21,6 @@ type JobPagination struct {
 	PostedDate     string `json:"posted_date"`
 	EmploymentType string `json:"employment_type"`
 	Requirement    string `json:"requirement"`
-	IsRemote       bool   `json:"is_remote"`
 }
 
 type PaginatedResponse[T any] struct {

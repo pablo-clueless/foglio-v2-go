@@ -7,6 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type ReactionType string
+
+const (
+	Dislike ReactionType = "dislike"
+	Like    ReactionType = "like"
+)
+
 type Job struct {
 	ID             uuid.UUID        `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Title          string           `json:"title" gorm:"not null"`
@@ -25,12 +32,36 @@ type Job struct {
 	CreatedAt      time.Time        `json:"created_at"`
 	UpdatedAt      time.Time        `json:"updated_at"`
 	DeletedAt      gorm.DeletedAt   `json:"-" gorm:"index"`
+	Comments       []Comment        `json:"comments,omitempty" gorm:"foreignKey:JobID;constraint:OnDelete:CASCADE"`
+	Reactions      []Reaction       `json:"reactions,omitempty" gorm:"foreignKey:JobID;constraint:OnDelete:CASCADE"`
 }
 
 type Salary struct {
 	Min      int64  `json:"min" gorm:"column:min"`
 	Max      int64  `json:"max" gorm:"column:max"`
 	Currency string `json:"currency" gorm:"column:currency"`
+}
+
+type Comment struct {
+	ID            uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	Content       string    `json:"content" gorm:"not null"`
+	JobID         uuid.UUID `json:"job_id" gorm:"type:uuid;not null;index"`
+	Job           Job       `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
+	CreatedBy     uuid.UUID `json:"created_by" gorm:"type:uuid;not null;index"`
+	CreatedByUser User      `json:"created_by_user" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnDelete:CASCADE"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type Reaction struct {
+	ID            uuid.UUID    `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	Type          ReactionType `json:"type" gorm:"not null"`
+	JobID         uuid.UUID    `json:"job_id" gorm:"type:uuid;not null;index"`
+	Job           Job          `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
+	CreatedBy     uuid.UUID    `json:"created_by" gorm:"type:uuid;not null;index"`
+	CreatedByUser User         `json:"created_by_user" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnDelete:CASCADE"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
 }
 
 type JobApplication struct {

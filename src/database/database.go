@@ -160,6 +160,9 @@ func runMigrations(db *gorm.DB) error {
 		{"013_create_project_highlights", &models.ProjectHighlight{}},
 		{"014_create_jobs", &models.Job{}},
 		{"015_create_job_applications", &models.JobApplication{}},
+		{"016_create_comments", &models.Comment{}},
+		{"017_create_reactions", &models.Reaction{}},
+		{"018_create_notifications", &models.Notification{}},
 	}
 
 	for _, migration := range migrations {

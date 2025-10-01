@@ -18,7 +18,7 @@ type FileResponse struct {
 }
 
 func SendFile(ctx *gin.Context, filePath string) {
-	ctx.File(filePath)
+	ctx.FileFromFS(filePath, http.Dir("./public"))
 }
 
 func SendFileWithName(ctx *gin.Context, filePath, filename string) {
