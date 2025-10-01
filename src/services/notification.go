@@ -58,7 +58,7 @@ func (s *NotificationService) NotifyJobApplication(jobPosterID, applicantID, job
 
 	return s.SendRealTimeNotification(
 		jobPosterID,
-		"application_submitted",
+		"APPLICATION_SUBMITTED",
 		"New Job Application",
 		applicantName+" applied for your job: "+jobTitle,
 		data,
@@ -74,7 +74,7 @@ func (s *NotificationService) NotifyApplicationAccepted(applicantID, jobPosterID
 
 	return s.SendRealTimeNotification(
 		applicantID,
-		"application_accepted",
+		"APPLICATION_ACCEPTED",
 		"Application Accepted!",
 		"Your application for "+jobTitle+" has been accepted",
 		data,
@@ -90,7 +90,7 @@ func (s *NotificationService) NotifyApplicationRejected(applicantID, jobPosterID
 
 	return s.SendRealTimeNotification(
 		applicantID,
-		"application_rejected",
+		"APPLICATION_REJECTED",
 		"Application Update",
 		"Your application for "+jobTitle+" was not selected",
 		data,

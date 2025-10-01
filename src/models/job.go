@@ -7,11 +7,21 @@ import (
 	"gorm.io/gorm"
 )
 
+type EmploymentType string
 type ReactionType string
 
 const (
-	Dislike ReactionType = "dislike"
-	Like    ReactionType = "like"
+	Dislike ReactionType = "DISLIKE"
+	Like    ReactionType = "LIKE"
+)
+
+const (
+	FullTime   EmploymentType = "FULL_TIME"
+	PartTime   EmploymentType = "PART_TIME"
+	Contract   EmploymentType = "CONTRACT"
+	Temporary  EmploymentType = "TEMPORARY"
+	Internship EmploymentType = "INTERNSHIP"
+	Freelance  EmploymentType = "FREELANCE"
 )
 
 type Job struct {
@@ -25,7 +35,7 @@ type Job struct {
 	PostedDate     time.Time        `json:"posted_date" gorm:"not null"`
 	Deadline       *time.Time       `json:"deadline,omitempty"`
 	IsRemote       bool             `json:"is_remote" gorm:"default:false"`
-	EmploymentType string           `json:"employment_type" gorm:"not null"`
+	EmploymentType EmploymentType   `json:"employment_type" gorm:"not null"`
 	CreatedBy      uuid.UUID        `json:"created_by" gorm:"type:uuid;not null;index"`
 	CreatedByUser  User             `json:"created_by_user" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnDelete:CASCADE"`
 	Applications   []JobApplication `json:"applications,omitempty" gorm:"foreignKey:JobID;constraint:OnDelete:CASCADE"`

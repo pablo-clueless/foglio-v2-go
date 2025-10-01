@@ -10,11 +10,11 @@ import (
 type NotificationType string
 
 const (
-	ApplicationSubmitted NotificationType = "application_submitted"
-	ApplicationAccepted  NotificationType = "application_accepted"
-	ApplicationRejected  NotificationType = "application_rejected"
-	NewMessage           NotificationType = "new_message"
-	System               NotificationType = "system"
+	ApplicationSubmitted NotificationType = "APPLICATION_SUBMITTED"
+	ApplicationAccepted  NotificationType = "APPLICATION_ACCEPTED"
+	ApplicationRejected  NotificationType = "APPLICATION_REJECTED"
+	NewMessage           NotificationType = "NEW_MESSAGE"
+	System               NotificationType = "SYSTEM"
 )
 
 type Notification struct {

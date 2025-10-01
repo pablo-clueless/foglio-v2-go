@@ -58,7 +58,7 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		Requirements:   payload.Requirements,
 		Salary:         payload.Salary,
 		IsRemote:       payload.IsRemote,
-		EmploymentType: payload.EmploymentType,
+		EmploymentType: models.EmploymentType(payload.EmploymentType),
 		CreatedBy:      user.ID,
 	}
 
