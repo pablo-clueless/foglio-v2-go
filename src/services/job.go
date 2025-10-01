@@ -5,6 +5,7 @@ import (
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/models"
+	"log"
 	"strings"
 
 	"github.com/google/uuid"
@@ -12,12 +13,14 @@ import (
 )
 
 type JobService struct {
-	database *gorm.DB
+	database     *gorm.DB
+	notification *NotificationService
 }
 
-func NewJobService(database *gorm.DB) *JobService {
+func NewJobService(database *gorm.DB, notification *NotificationService) *JobService {
 	return &JobService{
-		database: database,
+		database:     database,
+		notification: notification,
 	}
 }
 
@@ -295,6 +298,18 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	}
 
 	go func() {
+		if err := s.notification.NotifyJobApplication(
+			job.CreatedBy.String(),
+			userId,
+			jobId,
+			job.Title,
+			user.Name,
+		); err != nil {
+			log.Printf("Failed to send notification: %v", err)
+		}
+	}()
+
+	go func() {
 		lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Application Submitted",
@@ -466,6 +481,30 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 			Template: "application-status-update",
 			Data:     emailData,
 		})
+	}()
+
+	go func() {
+		var err error
+		switch application.Status {
+		case "accepted":
+			err = s.notification.NotifyApplicationAccepted(
+				application.ApplicantID.String(),
+				recruiterId,
+				application.JobID.String(),
+				application.Job.Title,
+			)
+		case "rejected":
+			err = s.notification.NotifyApplicationRejected(
+				application.ApplicantID.String(),
+				recruiterId,
+				application.JobID.String(),
+				application.Job.Title,
+			)
+		}
+
+		if err != nil {
+			log.Printf("Failed to send notification: %v", err)
+		}
 	}()
 
 	if err := s.database.Preload("Job").Preload("Applicant").First(&application, application.ID).Error; err != nil {

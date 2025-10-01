@@ -7,15 +7,26 @@ import (
 	"gorm.io/gorm"
 )
 
+type NotificationType string
+
+const (
+	ApplicationSubmitted NotificationType = "application_submitted"
+	ApplicationAccepted  NotificationType = "application_accepted"
+	ApplicationRejected  NotificationType = "application_rejected"
+	NewMessage           NotificationType = "new_message"
+	System               NotificationType = "system"
+)
+
 type Notification struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Title     string    `gorm:"not null" json:"title"`
-	Content   string    `gorm:"not null" json:"content"`
-	IsRead    bool      `json:"is_read"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	OwnerID   uuid.UUID `json:"owner_id" gorm:"type:uuid;not null;index"`
-	Owner     User      `json:"owner" gorm:"foreignKey:OwnerID;references:ID;constraint:OnDelete:CASCADE"`
+	ID        uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Title     string           `gorm:"not null" json:"title"`
+	Content   string           `gorm:"not null" json:"content"`
+	Type      NotificationType `gorm:"not null" json:"type"`
+	IsRead    bool             `json:"is_read"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
+	OwnerID   uuid.UUID        `json:"owner_id" gorm:"type:uuid;not null;index"`
+	Owner     User             `json:"owner" gorm:"foreignKey:OwnerID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (n *Notification) BeforeCreate(tx *gorm.DB) {

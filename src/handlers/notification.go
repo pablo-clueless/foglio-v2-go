@@ -16,7 +16,7 @@ type NotificationHandler struct {
 
 func NewNotificationHandler() *NotificationHandler {
 	return &NotificationHandler{
-		service: services.NewNotificationService(database.GetDatabase()),
+		service: services.NewNotificationService(database.GetDatabase(), lib.NewHub()),
 	}
 }
 

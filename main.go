@@ -87,6 +87,9 @@ func main() {
 		lib.Success(ctx, "Foglio API v"+config.AppConfig.Version+" is running", map[string]interface{}{})
 	})
 	router.GET("/ws", websocket.HandleWebSocket)
+	router.GET("/ws/stats", websocket.GetStats)
+	router.POST("/ws/send-notification", websocket.SendNotification)
+	router.POST("/ws/broadcast", websocket.Broadcast)
 	router.GET("/health", func(ctx *gin.Context) {
 		lib.Success(ctx, "Foglio API is healthy", map[string]interface{}{
 			"version": config.AppConfig.Version,

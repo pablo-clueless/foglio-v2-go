@@ -17,7 +17,7 @@ type JobHandler struct {
 
 func NewJobHandler() *JobHandler {
 	return &JobHandler{
-		service: services.NewJobService(database.GetDatabase()),
+		service: services.NewJobService(database.GetDatabase(), services.NewNotificationService(database.GetDatabase(), lib.NewHub())),
 	}
 }
 
