@@ -11,6 +11,7 @@ func UserRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	handler := handlers.NewUserHandler()
 
 	users.GET("", handler.GetUsers())
+	users.GET("/me", handler.GetMe())
 	users.GET("/:id", handler.GetUser())
 	users.PUT("/:id", handler.UpdateUser())
 	users.PUT("/:id/avatar", handler.UpdateAvatar())

@@ -65,8 +65,8 @@ type OAuthTokenResponse struct {
 }
 
 type SigninResponse struct {
-	User  models.User
-	Token string
+	User  models.User `json:"user"`
+	Token string      `json:"token"`
 }
 
 func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error) {
@@ -170,8 +170,9 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 }
 
 func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
-	user, err := s.FindUserByOtp(otp)
-	if err != nil {
+	var user models.User
+
+	if err := s.database.Where("otp = ?", otp).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
@@ -179,13 +180,12 @@ func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
 	}
 
 	user.Verified = true
-
-	if err = s.database.Save(&user).Error; err != nil {
+	if err := s.database.Save(&user).Error; err != nil {
 		return nil, err
 	}
 
 	go func() {
-		err = lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Account Verified",
 			Template: "verified",
@@ -350,15 +350,6 @@ func (s *AuthService) FindUserByUsername(username string) (models.User, error) {
 	var user models.User
 
 	if err := s.database.Where("username = ?", username).First(&user).Error; err != nil {
-		return models.User{}, err
-	}
-
-	return user, nil
-}
-func (s *AuthService) FindUserByOtp(otp string) (models.User, error) {
-	var user models.User
-
-	if err := s.database.Where("otp = ?", otp).First(&user).Error; err != nil {
 		return models.User{}, err
 	}
 

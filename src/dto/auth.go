@@ -46,7 +46,7 @@ type ChangePasswordDto struct {
 }
 
 type VerificationDto struct {
-	Otp string `json:"token"`
+	Otp string `json:"otp"`
 }
 
 type ForgotPasswordDto struct {

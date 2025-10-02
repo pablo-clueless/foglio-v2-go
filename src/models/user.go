@@ -27,6 +27,7 @@ type User struct {
 	Education      []Education     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,omitempty"`
 	Certifications []Certification `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,omitempty"`
 	Languages      []Language      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,omitempty"`
+	IsAdmin        bool            `json:"is_admin"`
 	IsRecruiter    bool            `json:"is_recruiter"`
 	IsPremium      bool            `json:"is_premium"`
 	CreatedAt      time.Time       `json:"created_at"`

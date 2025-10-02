@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"foglio/v2/src/config"
 	"foglio/v2/src/database"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
@@ -41,6 +42,20 @@ func (h *UserHandler) GetUsers() gin.HandlerFunc {
 func (h *UserHandler) GetUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.Param("id")
+
+		user, err := h.service.GetUser(id)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "User fetched successfully", user)
+	}
+}
+
+func (h *UserHandler) GetMe() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
 
 		user, err := h.service.GetUser(id)
 		if err != nil {
