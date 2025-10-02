@@ -37,7 +37,7 @@ func GenerateToken(id uuid.UUID) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "adire-apparel",
+			Issuer:    "foglio",
 			Subject:   id.String(),
 		},
 	}
