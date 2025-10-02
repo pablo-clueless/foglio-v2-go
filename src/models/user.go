@@ -15,18 +15,19 @@ type User struct {
 	Password       string          `gorm:"null" json:"-"`                   // Nullable for OAuth users
 	Provider       string          `gorm:"default:'local'" json:"provider"` // local, google, github
 	ProviderID     string          `gorm:"null" json:"-"`                   // Provider's user ID
-	Phone          *string         `json:"phone,omitempty"`
-	Headline       *string         `json:"headline,omitempty"`
-	Location       *string         `json:"location,omitempty"`
-	Image          *string         `json:"image,omitempty"`
+	Phone          *string         `json:"phone"`
+	Headline       *string         `json:"headline"`
+	Location       *string         `json:"location"`
+	Image          *string         `json:"image"`
 	Summary        string          `gorm:"not null" json:"summary"`
 	CompanyID      *uuid.UUID      `gorm:"type:uuid;index" json:"company_id,omitempty"`
-	Skills         []Skill         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"skills,omitempty"`
-	Projects       []Project       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,omitempty"`
-	Experiences    []Experience    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,omitempty"`
-	Education      []Education     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,omitempty"`
-	Certifications []Certification `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,omitempty"`
-	Languages      []Language      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,omitempty"`
+	Company        *Company        `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
+	Skills         []Skill         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"skills,"`
+	Projects       []Project       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
+	Experiences    []Experience    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
+	Education      []Education     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
+	Certifications []Certification `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
+	Languages      []Language      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
 	IsAdmin        bool            `json:"is_admin"`
 	IsRecruiter    bool            `json:"is_recruiter"`
 	IsPremium      bool            `json:"is_premium"`
@@ -35,7 +36,6 @@ type User struct {
 	DeletedAt      gorm.DeletedAt  `gorm:"index" json:"-"`
 	Verified       bool            `json:"verified"`
 	Otp            string          `json:"otp"`
-	Company        *Company        `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
 }
 
 type Company struct {
