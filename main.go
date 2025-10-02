@@ -103,6 +103,7 @@ func main() {
 	routes.AuthRoutes(router)
 	routes.UserRoutes(router)
 	routes.JobRoutes(router)
+	routes.SelfRoutes(router)
 	routes.NotificationRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 

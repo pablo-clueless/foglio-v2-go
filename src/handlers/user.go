@@ -57,6 +57,11 @@ func (h *UserHandler) GetMe() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)
 
+		if id == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
 		user, err := h.service.GetUser(id)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())

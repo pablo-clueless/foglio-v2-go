@@ -12,7 +12,6 @@ func JobRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 
 	jobs.POST("", handler.CreateJob())
 	jobs.GET("", handler.GetJobs())
-	jobs.GET("/me", handler.GetJobsByUser())
 	jobs.GET("/:id", handler.GetJob())
 	jobs.PUT("/:id", handler.UpdateJob())
 	jobs.DELETE("/:id", handler.DeleteJob())
