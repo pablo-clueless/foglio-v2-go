@@ -54,7 +54,7 @@ func InitializeConfig() {
 		AccessTokenExpiresIn: time.Minute * 30,
 		AppEmail:             os.Getenv("APP_EMAIL"),
 		ApiUrl:               os.Getenv("API_URL"),
-		ClientUrl:            os.Getenv("CLIENT_URL"),
+		ClientUrl:            "CLIENT_URL",
 		CloudinaryKey:        os.Getenv("CLOUDINARY_KEY"),
 		CloudinaryName:       os.Getenv("CLOUDINARY_NAME"),
 		CloudinarySecret:     os.Getenv("CLOUDINARY_SECRET"),

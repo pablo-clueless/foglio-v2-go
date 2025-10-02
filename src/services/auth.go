@@ -8,6 +8,7 @@ import (
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/models"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -69,10 +70,7 @@ type SigninResponse struct {
 }
 
 func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error) {
-	exists, err := s.FindUserByEmail(payload.Email)
-	if err != nil {
-		return nil, lib.ErrBadRequest
-	}
+	exists, _ := s.FindUserByEmail(payload.Email)
 	if exists != nil {
 		return nil, errors.New("this email has been used")
 	}
@@ -99,15 +97,19 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 	}
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Welcome",
 			Template: "welcome",
 			Data: map[string]interface{}{
-				"Name": []string{user.Username},
-				"Otp":  user.Otp,
+				"Name":  user.Name,
+				"Email": user.Email,
+				"Otp":   user.Otp,
 			},
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
 	return &user, nil
@@ -131,15 +133,19 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 
 	if !user.Verified {
 		go func() {
-			lib.SendEmail(lib.EmailDto{
+			err = lib.SendEmail(lib.EmailDto{
 				To:       []string{user.Email},
 				Subject:  "Verification",
 				Template: "verification",
 				Data: map[string]interface{}{
-					"Name": []string{user.Username},
-					"Otp":  user.Otp,
+					"Name":  user.Name,
+					"Email": user.Email,
+					"Otp":   user.Otp,
 				},
 			})
+			if err != nil {
+				log.Printf("Failed to send email: %v", err)
+			}
 		}()
 		return nil, errors.New("user not verified")
 	}
@@ -163,33 +169,48 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 	}, nil
 }
 
-func (s *AuthService) Verification(otp string) error {
+func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
 	user, err := s.FindUserByOtp(otp)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user not found")
+			return nil, errors.New("user not found")
 		}
-		return err
+		return nil, err
 	}
 
 	user.Verified = true
 
-	if err := s.database.Save(&user).Error; err != nil {
-		return err
+	if err = s.database.Save(&user).Error; err != nil {
+		return nil, err
 	}
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
+		err = lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Account Verified",
 			Template: "verified",
 			Data: map[string]interface{}{
-				"Name": []string{user.Username},
+				"Name":  user.Name,
+				"Email": user.Email,
 			},
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
-	return nil
+	token, err := lib.GenerateToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+	user.Otp = ""
+
+	return &SigninResponse{
+		User:  user,
+		Token: token,
+	}, nil
 }
 
 func (s *AuthService) ChangePassword(id string, payload dto.ChangePasswordDto) error {
@@ -237,21 +258,23 @@ func (s *AuthService) ForgotPassword(email string) error {
 		return err
 	}
 
-	url, err := lib.GenerateUrl(token)
-	if err != nil {
-		return err
-	}
+	client := config.AppConfig.ClientUrl + "/reset-password"
+	url := lib.GenerateUrl(client, token)
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Forgot Password",
 			Template: "forgot-password",
 			Data: map[string]interface{}{
-				"Name": user.Username,
-				"Url":  url,
+				"Name":  user.Username,
+				"Email": user.Email,
+				"Url":   url,
 			},
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
 	return nil
@@ -286,14 +309,18 @@ func (s *AuthService) ResetPassword(payload dto.ResetPasswordDto) error {
 	}
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Reset Password",
 			Template: "reset-password",
 			Data: map[string]interface{}{
-				"Name": user.Username,
+				"Name":  user.Name,
+				"Email": user.Email,
 			},
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
 	return nil

@@ -67,14 +67,17 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 	}
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
-			To:       []string{user.Email},
-			Subject:  "Job Created",
-			Template: "job-created",
-			Data: map[string]interface{}{
-				"Name": user.Username,
+		if err := s.notification.SendRealTimeNotification(
+			job.CreatedBy.String(),
+			"Job Posted",
+			"The job "+job.Title+" has been posted successfully",
+			"SYSTEM",
+			map[string]interface{}{
+				"Name": user.Name,
 			},
-		})
+		); err != nil {
+			log.Printf("Failed to send notification: %v", err)
+		}
 	}()
 
 	return job, nil
@@ -310,7 +313,7 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	}()
 
 	go func() {
-		lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Application Submitted",
 			Template: "application-submitted",
@@ -319,6 +322,9 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 				"Job":  job.Title,
 			},
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
 	return nil
@@ -475,12 +481,15 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 			emailData["Reason"] = *reason
 		}
 
-		lib.SendEmail(lib.EmailDto{
+		err := lib.SendEmail(lib.EmailDto{
 			To:       []string{application.Applicant.Email},
 			Subject:  "Application Status Updated",
 			Template: "application-status-update",
 			Data:     emailData,
 		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		}
 	}()
 
 	go func() {

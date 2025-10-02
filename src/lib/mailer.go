@@ -5,6 +5,7 @@ import (
 	"foglio/v2/src/config"
 	"html/template"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	"gopkg.in/gomail.v2"
@@ -29,11 +30,17 @@ var (
 	once         sync.Once
 )
 
+func getTemplatesDir() string {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	return filepath.Join(dir, "..", "templates")
+}
+
 func GetEmailService() *EmailService {
 	once.Do(func() {
 		emailService = &EmailService{
 			templates:    make(map[string]*template.Template),
-			templatesDir: "templates",
+			templatesDir: getTemplatesDir(),
 			dialer: gomail.NewDialer(
 				config.AppConfig.SmtpHost,
 				config.AppConfig.SmtpPort,
@@ -102,9 +109,4 @@ func (es *EmailService) SendEmail(payload EmailDto) error {
 
 func SendEmail(payload EmailDto) error {
 	return GetEmailService().SendEmail(payload)
-}
-
-type TestEmailDto struct {
-	Name  string `json:"name" validate:"required,name"`
-	Email string `json:"email" validate:"required,email"`
 }

@@ -13,7 +13,7 @@
   <link rel="stylesheet" type="text/css"
     href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <title>Welcome Email</title>
+  <title>Application Status Update</title>
   <style>
     * {
       font-family: "Figtree", sans-serif;
@@ -28,34 +28,47 @@
     </div>
 
     <div class="p-10">
-      <h1 class="text-2xl font-semibold text-gray-900 mb-6">Hello {{.Name}},</h1>
+      <h1 class="text-2xl font-semibold text-gray-900 mb-6">Application Status Update</h1>
 
       <p class="text-gray-600 text-base leading-relaxed mb-4">
-        Welcome! We're thrilled to have you join us. To get started, we need to verify your email address.
+        Hello {{.Name}},
       </p>
 
-      <div class="bg-gray-50 px-4 py-3 rounded-md text-sm text-gray-600 my-5 text-center">
-        Account: <span class="font-medium">{{.Email}}</span>
+      <p class="text-gray-600 text-base leading-relaxed mb-4">
+        Thank you for your interest in joining our team. We wanted to update you on the status of your application.
+      </p>
+
+      <div class="bg-gray-50 rounded-lg p-6 my-6">
+        <div class="mb-4">
+          <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Position Applied For</p>
+          <p class="text-base font-semibold text-gray-900">{{.Job}}</p>
+        </div>
+
+        <div class="border-t border-gray-200 pt-4">
+          <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Application Status</p>
+          <p class="text-lg font-semibold text-gray-900">{{.Status}}</p>
+        </div>
       </div>
 
-      <p class="text-gray-600 text-base leading-relaxed mb-4">
-        Please use the following One-Time Password (OTP) to complete your verification. This code is valid for the next
-        10 minutes.
-      </p>
-
-      <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center my-6">
-        <h2 class="text-4xl font-bold text-gray-900 tracking-widest">{{.Otp}}</h2>
-        <p class="text-xs text-gray-500 mt-3">This password will be valid for the next 10 minutes.</p>
+      <div class="bg-blue-50 border-l-4 border-blue-500 px-4 py-3 rounded-md my-6">
+        <div class="flex">
+          <i class="ph ph-info text-blue-500 text-xl mr-3 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <p class="text-sm font-medium text-blue-800">Additional Information</p>
+            <p class="text-sm text-blue-700 mt-1">{{.Reason}}</p>
+          </div>
+        </div>
       </div>
 
       <p class="text-gray-600 text-base leading-relaxed mb-6">
-        If you didn't create an account with us, you can safely ignore this email.
+        We appreciate the time and effort you put into your application. If you have any questions about your
+        application status, please don't hesitate to reach out to our team.
       </p>
 
-      <div class="text-center">
+      <div class="text-center my-8">
         <a href="#"
           class="inline-block bg-blue-500 text-white no-underline px-8 py-3 rounded-md text-base font-medium hover:bg-blue-600">
-          Verify Email
+          View Application
         </a>
       </div>
     </div>

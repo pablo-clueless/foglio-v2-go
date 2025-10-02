@@ -2,8 +2,6 @@ package lib
 
 import (
 	"crypto/rand"
-	"errors"
-	"foglio/v2/src/config"
 	"math/big"
 	"strings"
 
@@ -20,11 +18,8 @@ func GenerateOtp() string {
 	return string(otp)
 }
 
-func GenerateUrl(token string) (string, error) {
-	if client := config.AppConfig.ClientUrl; client != "" {
-		return client + "?token=" + token, nil
-	}
-	return "", errors.New("client url not provided in env")
+func GenerateUrl(client, token string) string {
+	return client + "?token=" + token
 }
 
 func GenerateRandomString(length int) string {

@@ -22,10 +22,10 @@ func NewNotificationService(database *gorm.DB, hub *lib.Hub) *NotificationServic
 	}
 }
 
-func (s *NotificationService) SendRealTimeNotification(userID, notificationType, title, message string, data map[string]interface{}) error {
+func (s *NotificationService) SendRealTimeNotification(userID, title, message string, notificationType models.NotificationType, data map[string]interface{}) error {
 	notification := models.Notification{
 		OwnerID: uuid.Must(uuid.Parse(userID)),
-		Type:    models.NotificationType(notificationType),
+		Type:    notificationType,
 		Title:   title,
 		Content: message,
 		IsRead:  false,
@@ -60,7 +60,7 @@ func (s *NotificationService) NotifyJobApplication(jobPosterID, applicantID, job
 		jobPosterID,
 		"APPLICATION_SUBMITTED",
 		"New Job Application",
-		applicantName+" applied for your job: "+jobTitle,
+		"APPLICATION_SUBMITTED",
 		data,
 	)
 }
@@ -74,9 +74,9 @@ func (s *NotificationService) NotifyApplicationAccepted(applicantID, jobPosterID
 
 	return s.SendRealTimeNotification(
 		applicantID,
-		"APPLICATION_ACCEPTED",
-		"Application Accepted!",
 		"Your application for "+jobTitle+" has been accepted",
+		"Application Accepted!",
+		"APPLICATION_ACCEPTED",
 		data,
 	)
 }
@@ -90,9 +90,9 @@ func (s *NotificationService) NotifyApplicationRejected(applicantID, jobPosterID
 
 	return s.SendRealTimeNotification(
 		applicantID,
-		"APPLICATION_REJECTED",
-		"Application Update",
 		"Your application for "+jobTitle+" was not selected",
+		"Application Update",
+		"APPLICATION_REJECTED",
 		data,
 	)
 }

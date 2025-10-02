@@ -72,13 +72,13 @@ func (h *AuthHandler) Verification() gin.HandlerFunc {
 			return
 		}
 
-		err := h.service.Verification(otp)
+		user, err := h.service.Verification(otp)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
 		}
 
-		lib.Success(ctx, "User verified", nil)
+		lib.Success(ctx, "User verified", user)
 	}
 }
 
