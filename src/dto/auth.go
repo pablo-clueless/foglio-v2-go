@@ -45,6 +45,14 @@ type ChangePasswordDto struct {
 	NewPassword     string `json:"new_password"`
 }
 
+type VerificationDto struct {
+	Otp string `json:"token"`
+}
+
+type ForgotPasswordDto struct {
+	Email string `json:"email"`
+}
+
 type ResetPasswordDto struct {
 	CurrentPassword string `json:"current_password"`
 	NewPassword     string `json:"new_password"`

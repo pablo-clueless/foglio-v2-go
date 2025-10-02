@@ -65,14 +65,14 @@ func (h *AuthHandler) Signin() gin.HandlerFunc {
 
 func (h *AuthHandler) Verification() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var otp string
+		var payload dto.VerificationDto
 
-		if err := ctx.ShouldBind(&otp); err != nil {
+		if err := ctx.ShouldBind(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		user, err := h.service.Verification(otp)
+		user, err := h.service.Verification(payload.Otp)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
@@ -104,14 +104,14 @@ func (h *AuthHandler) ChangePassword() gin.HandlerFunc {
 
 func (h *AuthHandler) ForgotPassword() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var email string
+		var payload dto.ForgotPasswordDto
 
-		if err := ctx.ShouldBind(email); err != nil {
+		if err := ctx.ShouldBind(payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		err := h.service.ForgotPassword(email)
+		err := h.service.ForgotPassword(payload.Email)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
