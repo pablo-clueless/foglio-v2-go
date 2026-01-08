@@ -7,7 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/joho/godotenv"
 
 	"foglio/v2/src/config"
 	"foglio/v2/src/database"
@@ -24,7 +27,11 @@ type TestServer struct {
 func SetupTestServer() *TestServer {
 	gin.SetMode(gin.TestMode)
 
-	// Skip env file loading in tests - use environment variables directly
+	_ = godotenv.Load(".env")
+	_ = godotenv.Load("../../.env")
+	if os.Getenv("POSTGRES_URL") == "" && os.Getenv("DATABASE_URL") != "" {
+		_ = os.Setenv("POSTGRES_URL", os.Getenv("DATABASE_URL"))
+	}
 	config.InitializeConfig()
 
 	err := database.InitializeDatabase()

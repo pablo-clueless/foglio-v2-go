@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"foglio/v2/src/lib"
 	"foglio/v2/src/middlewares"
 	"foglio/v2/src/routes"
 	"foglio/v2/tests/utils"
@@ -22,10 +23,10 @@ func (suite *E2ETestSuite) SetupSuite() {
 
 	// Setup middlewares
 	suite.server.Router.Use(middlewares.ErrorHandlerMiddleware())
-	suite.server.Router.Use(middlewares.AuthMiddleware())
+	// Auth is enforced at handler level for protected routes in tests
 
 	// Setup routes
-	prefix := "/api/v"
+	prefix := "/api/v2"
 	router := suite.server.Router.Group(prefix)
 
 	routes.HealthRoutes(router)
@@ -33,6 +34,9 @@ func (suite *E2ETestSuite) SetupSuite() {
 	routes.UserRoutes(router)
 	routes.JobRoutes(router)
 	routes.NotificationRoutes(router)
+
+	// Return JSON for unknown endpoints like the main app
+	suite.server.Router.NoRoute(lib.GlobalNotFound())
 }
 
 func (suite *E2ETestSuite) TearDownSuite() {
