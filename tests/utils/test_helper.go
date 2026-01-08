@@ -24,9 +24,7 @@ type TestServer struct {
 func SetupTestServer() *TestServer {
 	gin.SetMode(gin.TestMode)
 
-	if err := config.InitializeEnvFile(); err != nil {
-		panic(fmt.Sprintf("Failed to initialize env file: %v", err))
-	}
+	// Skip env file loading in tests - use environment variables directly
 	config.InitializeConfig()
 
 	err := database.InitializeDatabase()

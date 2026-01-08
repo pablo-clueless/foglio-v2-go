@@ -11,6 +11,7 @@ test-unit:
 	go test -v ./src/...
 
 test-e2e:
+	copy .env.test .env
 	go test -v ./tests/...
 
 test-coverage:
