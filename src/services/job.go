@@ -330,6 +330,65 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	return nil
 }
 
+func (s *JobService) GetApplicationsByUser(userId string, params dto.Pagination) (*dto.PaginatedResponse[models.JobApplication], error) {
+	if params.Limit <= 0 {
+		params.Limit = 10
+	}
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+
+	auth := NewAuthService(s.database)
+	user, err := auth.FindUserById(userId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	if user.IsRecruiter {
+		return nil, errors.New("recruiters cannot view applications")
+	}
+
+	var applications []models.JobApplication
+	var totalItems int64
+
+	query := s.database.Model(&models.JobApplication{}).Where("applicant_id = ?", user.ID)
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		return &dto.PaginatedResponse[models.JobApplication]{
+			Data:       []models.JobApplication{},
+			Limit:      params.Limit,
+			Page:       params.Page,
+			TotalItems: 0,
+			TotalPages: 0,
+		}, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+
+	if err := query.
+		Preload("Job").
+		Preload("Applicant").
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(params.Limit).
+		Find(&applications).Error; err != nil {
+		return nil, err
+	}
+
+	totalPages := (totalItems + int64(params.Limit) - 1) / int64(params.Limit)
+
+	return &dto.PaginatedResponse[models.JobApplication]{
+		Data:       applications,
+		TotalItems: int(totalItems),
+		TotalPages: int(totalPages),
+		Page:       params.Page,
+		Limit:      params.Limit,
+	}, nil
+}
+
 func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.Pagination) (*dto.PaginatedResponse[models.JobApplication], error) {
 	if params.Limit <= 0 {
 		params.Limit = 10

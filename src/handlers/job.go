@@ -149,6 +149,27 @@ func (h *JobHandler) ApplyToJob() gin.HandlerFunc {
 	}
 }
 
+func (h *JobHandler) GetApplicationsByUser() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		var query dto.Pagination
+
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		applications, err := h.service.GetApplicationsByUser(id, query)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Applications fetched successfully", applications)
+
+	}
+}
+
 func (h *JobHandler) GetApplicationsByJob() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)

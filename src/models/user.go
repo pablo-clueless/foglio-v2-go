@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID             uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name           string          `gorm:"not null" json:"name"`
-	Username       string          `gorm:"not null" json:"username"`
+	Username       string          `gorm:"uniqueIndex;not null" json:"username"`
 	Email          string          `gorm:"uniqueIndex;not null" json:"email"`
 	Password       string          `gorm:"null" json:"-"`                   // Nullable for OAuth users
 	Provider       string          `gorm:"default:'local'" json:"provider"` // local, google, github

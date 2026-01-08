@@ -70,9 +70,14 @@ type SigninResponse struct {
 }
 
 func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error) {
-	exists, _ := s.FindUserByEmail(payload.Email)
-	if exists != nil {
+	fmt.Println(payload)
+	emailExists, err := s.FindUserByEmail(payload.Email)
+	if err == nil && emailExists != nil {
 		return nil, errors.New("this email has been used")
+	}
+	usernameExists, err := s.FindUserByUsername(payload.Username)
+	if err == nil && usernameExists != nil {
+		return nil, errors.New("this username has been used")
 	}
 	if !lib.ValidatePassword(payload.Password) {
 		return nil, errors.New("invalid password")
@@ -80,7 +85,7 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 
 	hashed, err := lib.HashPassword(payload.Password)
 	if err != nil {
-		return nil, errors.New("")
+		return nil, errors.New("failed to hash password")
 	}
 
 	otp := lib.GenerateOtp()
@@ -88,8 +93,9 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 	user := models.User{
 		Name:     payload.Name,
 		Email:    payload.Email,
-		Password: hashed,
 		Otp:      otp,
+		Password: hashed,
+		Username: payload.Username,
 	}
 
 	if err := s.database.Create(&user).Error; err != nil {
@@ -180,6 +186,7 @@ func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
 	}
 
 	user.Verified = true
+	user.Otp = ""
 	if err := s.database.Save(&user).Error; err != nil {
 		return nil, err
 	}
@@ -336,24 +343,24 @@ func (s *AuthService) FindUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *AuthService) FindUserById(id string) (models.User, error) {
+func (s *AuthService) FindUserById(id string) (*models.User, error) {
 	var user models.User
 
 	if err := s.database.Where("id = ?", id).First(&user).Error; err != nil {
-		return models.User{}, err
+		return nil, err
 	}
 
-	return user, nil
+	return &user, nil
 }
 
-func (s *AuthService) FindUserByUsername(username string) (models.User, error) {
+func (s *AuthService) FindUserByUsername(username string) (*models.User, error) {
 	var user models.User
 
 	if err := s.database.Where("username = ?", username).First(&user).Error; err != nil {
-		return models.User{}, err
+		return nil, err
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 func (s *AuthService) GetOAuthURL(provider string) (string, error) {

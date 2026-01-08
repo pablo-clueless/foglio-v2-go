@@ -84,10 +84,11 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 	}, nil
 }
 
-func (s *UserService) GetUser(id string) (*models.User, error) {
+func (s *UserService) GetUser(idOrUsername string) (*models.User, error) {
 	var user *models.User
 
-	if err := s.database.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Preload("Company").Where("id = ?", id).First(&user).Error; err != nil {
+	if err := s.database.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Preload("Company").
+		Where("id = ? OR LOWER(username) = LOWER(?)", idOrUsername, idOrUsername).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
@@ -123,7 +124,7 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (s *UserService) UpdateAvatar(id, imageUrl string) (*models.User, error) {
@@ -142,7 +143,7 @@ func (s *UserService) UpdateAvatar(id, imageUrl string) (*models.User, error) {
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (s *UserService) DeleteUser(id string) error {

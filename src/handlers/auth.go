@@ -32,11 +32,12 @@ func (h *AuthHandler) CreateUser() gin.HandlerFunc {
 			Name:     payload.Name,
 			Email:    payload.Email,
 			Password: payload.Password,
+			Username: payload.Username,
 		}
 
 		created, err := h.service.CreateUser(user)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -55,7 +56,7 @@ func (h *AuthHandler) Signin() gin.HandlerFunc {
 
 		user, err := h.service.Signin(payload)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -74,7 +75,7 @@ func (h *AuthHandler) Verification() gin.HandlerFunc {
 
 		user, err := h.service.Verification(payload.Otp)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -94,7 +95,7 @@ func (h *AuthHandler) ChangePassword() gin.HandlerFunc {
 
 		err := h.service.ChangePassword(id, payload)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -113,7 +114,7 @@ func (h *AuthHandler) ForgotPassword() gin.HandlerFunc {
 
 		err := h.service.ForgotPassword(payload.Email)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -134,7 +135,7 @@ func (h *AuthHandler) ResetPassword() gin.HandlerFunc {
 
 		err := h.service.ResetPassword(payload)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
@@ -148,7 +149,7 @@ func (h *AuthHandler) GetOAuthURL() gin.HandlerFunc {
 
 		url, err := h.service.GetOAuthURL(provider)
 		if err != nil {
-			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
