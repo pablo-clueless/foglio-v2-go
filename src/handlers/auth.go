@@ -56,6 +56,14 @@ func (h *AuthHandler) Signin() gin.HandlerFunc {
 
 		user, err := h.service.Signin(payload)
 		if err != nil {
+			if err.Error() == "user not found" {
+				lib.NotFound(ctx, err.Error(), "")
+				return
+			}
+			if err.Error() == "invalid password" || err.Error() == "user not verified" {
+				lib.Unauthorized(ctx, err.Error())
+				return
+			}
 			lib.InternalServerError(ctx, err.Error())
 			return
 		}

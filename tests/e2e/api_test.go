@@ -101,6 +101,8 @@ func (suite *E2ETestSuite) TestJobEndpoints() {
 	}
 
 	utils.MakeRequest(suite.server.Router, "POST", "/api/v2/auth/signup", registerData)
+	// We do not assert signup here because it might fail if user already exists (e.g. from previous run),
+	// but we proceed to login which should work either way if the user exists.
 
 	loginData := map[string]interface{}{
 		"email":    "jobtest@example.com",
@@ -110,7 +112,16 @@ func (suite *E2ETestSuite) TestJobEndpoints() {
 	w := utils.MakeRequest(suite.server.Router, "POST", "/api/v2/auth/signin", loginData)
 	response := utils.AssertJSONResponse(suite.T(), w, http.StatusOK)
 	assert.Equal(suite.T(), "success", response["status"])
-	data := response["data"].(map[string]interface{})
+
+	// Check if data exists before accessing it
+	if response["status"] != "success" || response["data"] == nil {
+		suite.T().FailNow()
+	}
+
+	data, ok := response["data"].(map[string]interface{})
+	if !ok {
+		suite.T().Fatalf("Response data is not a map: %v", response["data"])
+	}
 	token := data["token"].(string)
 
 	// Test getting jobs (should be empty initially)
