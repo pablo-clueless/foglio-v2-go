@@ -132,7 +132,9 @@ func (h *Hub) GetUserCount() int {
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			log.Printf("Error closing WebSocket connection: %v", err)
+		}
 	}()
 
 	for {

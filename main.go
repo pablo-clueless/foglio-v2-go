@@ -18,7 +18,9 @@ import (
 )
 
 func main() {
-	config.InitializeEnvFile()
+	if err := config.InitializeEnvFile(); err != nil {
+		log.Fatal("Failed to initialize env file:", err)
+	}
 	config.InitializeConfig()
 
 	err := database.InitializeDatabase()

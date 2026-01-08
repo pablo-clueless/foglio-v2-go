@@ -23,7 +23,9 @@ type TestServer struct {
 func SetupTestServer() *TestServer {
 	gin.SetMode(gin.TestMode)
 
-	config.InitializeEnvFile()
+	if err := config.InitializeEnvFile(); err != nil {
+		panic(fmt.Sprintf("Failed to initialize env file: %v", err))
+	}
 	config.InitializeConfig()
 
 	err := database.InitializeDatabase()
@@ -41,7 +43,9 @@ func SetupTestServer() *TestServer {
 }
 
 func (ts *TestServer) Cleanup() {
-	database.CloseDatabase()
+	if err := database.CloseDatabase(); err != nil {
+		// Log error but continue cleanup
+	}
 }
 
 func MakeRequest(router *gin.Engine, method, url string, body interface{}) *httptest.ResponseRecorder {

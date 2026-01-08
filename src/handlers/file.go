@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -68,12 +69,23 @@ func SendReaderAsFile(ctx *gin.Context, reader io.Reader, filename, contentType 
 }
 
 func StreamFile(ctx *gin.Context, filePath string) error {
-	file, err := os.Open(filePath)
+	cleanPath := filepath.Clean(filePath)
+	if strings.Contains(cleanPath, "..") {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return fmt.Errorf("invalid file path")
+	}
+
+	file, err := os.Open(cleanPath)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			// Log the error but do not fail the request
+			fmt.Fprintf(os.Stderr, "failed to close file %s: %v\n", cleanPath, closeErr)
+		}
+	}()
 
 	stat, err := file.Stat()
 	if err != nil {
@@ -118,24 +130,28 @@ func DownloadUserResume(ctx *gin.Context) {
 	userID := ctx.Param("id")
 	resumePath := fmt.Sprintf("./uploads/resumes/%s.pdf", userID)
 
-	SendFileResponse(ctx, FileResponse{
+	if err := SendFileResponse(ctx, FileResponse{
 		Path:        resumePath,
 		Filename:    fmt.Sprintf("resume_%s.pdf", userID),
 		ContentType: "application/pdf",
 		Inline:      false,
-	})
+	}); err != nil {
+		return
+	}
 }
 
 func ViewUserResume(ctx *gin.Context) {
 	userID := ctx.Param("id")
 	resumePath := fmt.Sprintf("./uploads/resumes/%s.pdf", userID)
 
-	SendFileResponse(ctx, FileResponse{
+	if err := SendFileResponse(ctx, FileResponse{
 		Path:        resumePath,
 		Filename:    fmt.Sprintf("resume_%s.pdf", userID),
 		ContentType: "application/pdf",
 		Inline:      true,
-	})
+	}); err != nil {
+		return
+	}
 }
 
 func ExportJobApplicationsCSV(ctx *gin.Context) {

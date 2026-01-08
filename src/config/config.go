@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -50,7 +51,9 @@ var AppConfig *Config
 
 func InitializeConfig() {
 	rand.Seed(time.Now().UnixNano())
-	InitializeEnvFile()
+	if err := InitializeEnvFile(); err != nil {
+		log.Fatal("Failed to initialize env file:", err)
+	}
 	AppConfig = &Config{
 		AccessTokenExpiresIn: time.Minute * 30,
 		AppEmail:             os.Getenv("APP_EMAIL"),
