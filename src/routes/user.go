@@ -16,5 +16,9 @@ func UserRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	users.PUT("/:id/avatar", handler.UpdateAvatar())
 	users.DELETE("/:id", handler.DeleteUser())
 
+	// Add user profile route for tests
+	user := router.Group("/user")
+	user.GET("/profile", handler.GetMe())
+
 	return users
 }

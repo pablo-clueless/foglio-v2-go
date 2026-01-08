@@ -69,7 +69,7 @@ jobs:
         SMTP_PORT=587
         SMTP_USER=test@example.com
         SMTP_PASSWORD=test-password
-        VERSION=v1
+        VERSION=v2
         EOF
         
     - name: Install dependencies
@@ -103,7 +103,7 @@ jobs:
         SMTP_PORT: 587
         SMTP_USER: test@example.com
         SMTP_PASSWORD: test-password
-        VERSION: v1
+        VERSION: v2
       
     - name: Build application
       run: go build -v ./...
