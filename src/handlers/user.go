@@ -6,6 +6,7 @@ import (
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
 	"foglio/v2/src/services"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,7 +102,11 @@ func (h *UserHandler) UpdateAvatar() gin.HandlerFunc {
 			lib.BadRequest(ctx, "avatar field is required", "400")
 			return
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Printf("Error closing file: %v", err)
+			}
+		}()
 
 		url, err := lib.UploadSingle(header, "foglio-images")
 		if err != nil {

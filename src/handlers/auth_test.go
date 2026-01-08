@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,9 +18,7 @@ import (
 
 func setupTestRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	if err := config.InitializeEnvFile(); err != nil {
-		panic(err)
-	}
+	// Skip env file loading in tests - use environment variables directly
 	config.InitializeConfig()
 	if err := database.InitializeDatabase(); err != nil {
 		panic(err)
@@ -34,7 +33,7 @@ func TestRegisterHandler(t *testing.T) {
 	router := setupTestRouter()
 	defer func() {
 		if err := database.CloseDatabase(); err != nil {
-			// Log error but continue
+			log.Printf("Error closing database: %v", err)
 		}
 	}()
 

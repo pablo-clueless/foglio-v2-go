@@ -24,7 +24,11 @@ func main() {
 	config.InitializeConfig()
 
 	err := database.InitializeDatabase()
-	defer database.CloseDatabase()
+	defer func() {
+		if err := database.CloseDatabase(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}()
 	if err != nil {
 		log.Fatal("Database error:", err)
 	}

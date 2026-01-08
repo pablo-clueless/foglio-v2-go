@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"foglio/v2/src/config"
+	"log"
 	"mime/multipart"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -27,7 +28,11 @@ func UploadMultiple(files []*multipart.FileHeader, path string) ([]string, error
 		if err != nil {
 			return nil, err
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Printf("Error closing file: %v", err)
+			}
+		}()
 
 		res, err := cld.Upload.Upload(ctx, file, params)
 		if err != nil {
@@ -56,7 +61,11 @@ func UploadSingle(fileHeader *multipart.FileHeader, path string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Error closing file: %v", err)
+		}
+	}()
 
 	res, err := cld.Upload.Upload(ctx, file, params)
 	if err != nil {

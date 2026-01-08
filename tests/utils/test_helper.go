@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,7 +45,7 @@ func SetupTestServer() *TestServer {
 
 func (ts *TestServer) Cleanup() {
 	if err := database.CloseDatabase(); err != nil {
-		// Log error but continue cleanup
+		log.Printf("Error closing database: %v", err)
 	}
 }
 

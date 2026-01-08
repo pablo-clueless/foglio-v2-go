@@ -163,7 +163,11 @@ func (c *Client) readPump() {
 }
 
 func (c *Client) writePump() {
-	defer c.conn.Close()
+	defer func() {
+		if err := c.conn.Close(); err != nil {
+			log.Printf("Error closing WebSocket connection: %v", err)
+		}
+	}()
 
 	for notification := range c.send {
 		if err := c.conn.WriteJSON(notification); err != nil {

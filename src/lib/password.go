@@ -45,9 +45,11 @@ func ValidatePassword(password string) bool {
 		case '0' <= char && char <= '9':
 			hasNumber = true
 		case char >= 33 && char <= 126:
-			if !((char >= '0' && char <= '9') ||
+			if (char >= '0' && char <= '9') ||
 				(char >= 'A' && char <= 'Z') ||
-				(char >= 'a' && char <= 'z')) {
+				(char >= 'a' && char <= 'z') {
+				// Skip alphanumeric characters
+			} else {
 				hasSpecial = true
 			}
 		}

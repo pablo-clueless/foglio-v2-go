@@ -90,21 +90,21 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := ctx.Request.Header.Get("Authorization")
 		token, ok := extractBearerToken(authHeader)
 		if !ok {
-			ctx.Error(lib.NewApiErrror("No auth token found", http.StatusUnauthorized))
+			_ = ctx.Error(lib.NewApiErrror("No auth token found", http.StatusUnauthorized))
 			ctx.Abort()
 			return
 		}
 
 		claims, err := lib.ValidateToken(token)
 		if err != nil {
-			ctx.Error(lib.NewApiErrror("Invalid auth token", http.StatusUnauthorized))
+			_ = ctx.Error(lib.NewApiErrror("Invalid auth token", http.StatusUnauthorized))
 			ctx.Abort()
 			return
 		}
 
 		user, err := authService.FindUserById(claims.UserId.String())
 		if err != nil {
-			ctx.Error(lib.NewApiErrror("User not found", http.StatusNotFound))
+			_ = ctx.Error(lib.NewApiErrror("User not found", http.StatusNotFound))
 			ctx.Abort()
 			return
 		}

@@ -453,7 +453,11 @@ func (s *AuthService) exchangeCodeForToken(provider string, code string) (string
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Error closing response body: %v", err)
+		}
+	}()
 
 	var tokenResp OAuthTokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
@@ -491,7 +495,11 @@ func (s *AuthService) getUserInfo(provider string, accessToken string) (*dto.OAu
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Error closing response body: %v", err)
+		}
+	}()
 
 	var oauthUser dto.OAuthUserDto
 	oauthUser.Provider = provider
@@ -561,7 +569,11 @@ func (s *AuthService) getGitHubPrimaryEmail(accessToken string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Error closing response body: %v", err)
+		}
+	}()
 
 	var emails []struct {
 		Email    string `json:"email"`
