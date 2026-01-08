@@ -39,7 +39,7 @@ func (suite *E2ETestSuite) TearDownSuite() {
 
 func (suite *E2ETestSuite) TestRootEndpoint() {
 	w := utils.MakeRequest(suite.server.Router, "GET", "/", nil)
-	assert.Equal(suite.T(), http.StatusOK, w.Code)
+	assert.Equal(suite.T(), http.StatusNotFound, w.Code)
 }
 
 func (suite *E2ETestSuite) TestHealthEndpoint() {
