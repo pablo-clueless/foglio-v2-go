@@ -25,7 +25,7 @@ func main() {
 
 	err := database.InitializeDatabase()
 	defer func() {
-		if err := database.CloseDatabase(); err != nil {
+		if err = database.CloseDatabase(); err != nil {
 			log.Printf("Error closing database: %v", err)
 		}
 	}()
