@@ -97,7 +97,7 @@ func RateLimiterMiddleware(configs ...RateLimiterConfig) gin.HandlerFunc {
 			ctx.Header("X-RateLimit-Limit", fmt.Sprintf("%d", config.RequestsPerWindow))
 			ctx.Header("X-RateLimit-Remaining", "0")
 			ctx.Header("X-RateLimit-Reset", fmt.Sprintf("%d", time.Now().Add(config.WindowDuration).Unix()))
-			ctx.Error(lib.NewApiErrror("Rate limit exceeded", http.StatusTooManyRequests))
+			_ = ctx.Error(lib.NewApiErrror("Rate limit exceeded", http.StatusTooManyRequests))
 			ctx.Abort()
 			return
 		}
