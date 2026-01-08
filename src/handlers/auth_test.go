@@ -17,9 +17,13 @@ import (
 
 func setupTestRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	config.InitializeEnvFile()
+	if err := config.InitializeEnvFile(); err != nil {
+		panic(err)
+	}
 	config.InitializeConfig()
-	database.InitializeDatabase()
+	if err := database.InitializeDatabase(); err != nil {
+		panic(err)
+	}
 	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
 
 	router := gin.New()
@@ -28,7 +32,11 @@ func setupTestRouter() *gin.Engine {
 
 func TestRegisterHandler(t *testing.T) {
 	router := setupTestRouter()
-	defer database.CloseDatabase()
+	defer func() {
+		if err := database.CloseDatabase(); err != nil {
+			// Log error but continue
+		}
+	}()
 
 	router.POST("/register", NewAuthHandler().CreateUser())
 
