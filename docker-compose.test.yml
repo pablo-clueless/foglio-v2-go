@@ -1,0 +1,44 @@
+services:
+  postgresql-test:
+    image: postgres:16-alpine
+    container_name: postgresql-test
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: foglio_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - foglio_test_network
+
+  foglio-test:
+    build: .
+    container_name: foglio-test
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - JWT_TOKEN_SECRET=test-secret-key
+      - DATABASE_URL=postgres://postgres:postgres@postgresql-test:5432/foglio_test?sslmode=disable
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=foglio_test
+      - POSTGRES_HOST=postgresql-test
+      - POSTGRES_PORT=5432
+      - IS_DEV_MODE=true
+      - VERSION=v1
+    command: ["go", "test", "-v", "./..."]
+    depends_on:
+      postgresql-test:
+        condition: service_healthy
+    networks:
+      - foglio_test_network
+
+networks:
+  foglio_test_network:
+    driver: bridge
