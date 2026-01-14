@@ -145,7 +145,10 @@ func (es *EmailService) returnSender(sender *gomail.SendCloser) {
 	select {
 	case es.pool <- sender:
 	default:
-		(*sender).Close()
+		err := (*sender).Close()
+		if err != nil {
+			fmt.Printf("failed to close sender: %v\n", err)
+		}
 	}
 }
 
@@ -251,11 +254,17 @@ func (es *EmailService) SendEmailWithContext(ctx context.Context, payload EmailD
 
 		select {
 		case <-ctx.Done():
-			(*sender).Close()
+			err := (*sender).Close()
+			if err != nil {
+				fmt.Printf("failed to close sender: %v\n", err)
+			}
 			return fmt.Errorf("send timeout: %w", ctx.Err())
 		case err := <-sendDone:
 			if err != nil {
-				(*sender).Close()
+				err := (*sender).Close()
+				if err != nil {
+					fmt.Printf("failed to close sender: %v\n", err)
+				}
 				lastErr = fmt.Errorf("attempt %d failed: %w", attempt+1, err)
 				continue
 			}
@@ -336,7 +345,10 @@ func (es *EmailService) SendBulkEmails(ctx context.Context, payloads []EmailDto)
 func (es *EmailService) Close() {
 	close(es.pool)
 	for sender := range es.pool {
-		(*sender).Close()
+		err := (*sender).Close()
+		if err != nil {
+			fmt.Printf("failed to close sender: %v\n", err)
+		}
 	}
 }
 
