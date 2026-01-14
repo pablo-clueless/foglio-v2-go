@@ -115,6 +115,8 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 		})
 		if err != nil {
 			log.Printf("Failed to send email: %v", err)
+		} else {
+			log.Printf("Email sent to: %v", user.Email)
 		}
 	}()
 
@@ -151,6 +153,8 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 			})
 			if err != nil {
 				log.Printf("Failed to send email: %v", err)
+			} else {
+				log.Printf("Email sent to: %v", user.Email)
 			}
 		}()
 		return nil, errors.New("user not verified")
@@ -203,6 +207,8 @@ func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
 		})
 		if err != nil {
 			log.Printf("Failed to send email: %v", err)
+		} else {
+			log.Printf("Email sent to: %v", user.Email)
 		}
 	}()
 
@@ -281,6 +287,8 @@ func (s *AuthService) ForgotPassword(email string) error {
 		})
 		if err != nil {
 			log.Printf("Failed to send email: %v", err)
+		} else {
+			log.Printf("Email sent to: %v", user.Email)
 		}
 	}()
 
@@ -327,6 +335,8 @@ func (s *AuthService) ResetPassword(payload dto.ResetPasswordDto) error {
 		})
 		if err != nil {
 			log.Printf("Failed to send email: %v", err)
+		} else {
+			log.Printf("Email sent to: %v", user.Email)
 		}
 	}()
 
