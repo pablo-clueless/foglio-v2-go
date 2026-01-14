@@ -161,7 +161,7 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 				log.Printf("Email sent to: %v", user.Email)
 			}
 		}()
-		return nil, errors.New("user not verified. a verification mail has been sent to your email.")
+		return nil, errors.New("user not verified. a verification mail has been sent to your email")
 	}
 
 	token, err := lib.GenerateToken(user.ID)
