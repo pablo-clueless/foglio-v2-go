@@ -137,33 +137,6 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 		return nil, errors.New("invalid password")
 	}
 
-	if !user.Verified {
-		otp := lib.GenerateOtp()
-		user.Otp = otp
-		if err = s.database.Save(&user).Error; err != nil {
-			return nil, err
-		}
-
-		go func() {
-			err = lib.GetEmailService().SendEmailSimple(lib.EmailDto{
-				To:       []string{user.Email},
-				Subject:  "Verification",
-				Template: "verification",
-				Data: map[string]interface{}{
-					"Name":  user.Name,
-					"Email": user.Email,
-					"Otp":   otp,
-				},
-			})
-			if err != nil {
-				log.Printf("Failed to send email: %v", err)
-			} else {
-				log.Printf("Email sent to: %v", user.Email)
-			}
-		}()
-		return nil, errors.New("user not verified. a verification mail has been sent to your email")
-	}
-
 	token, err := lib.GenerateToken(user.ID)
 	if err != nil {
 		return nil, err
@@ -176,6 +149,46 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 		User:  *user,
 		Token: token,
 	}, nil
+}
+
+func (s *AuthService) RequestVerification(email string) (*models.User, error) {
+	user, err := s.FindUserByEmail(email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	if user.Verified {
+		return nil, errors.New("user already verified")
+	}
+
+	otp := lib.GenerateOtp()
+	user.Otp = otp
+	if err = s.database.Save(&user).Error; err != nil {
+		return nil, err
+	}
+
+	go func() {
+		err = lib.GetEmailService().SendEmailSimple(lib.EmailDto{
+			To:       []string{user.Email},
+			Subject:  "Verification",
+			Template: "verification",
+			Data: map[string]interface{}{
+				"Name":  user.Name,
+				"Email": user.Email,
+				"Otp":   otp,
+			},
+		})
+		if err != nil {
+			log.Printf("Failed to send email: %v", err)
+		} else {
+			log.Printf("Email sent to: %v", user.Email)
+		}
+	}()
+
+	return nil, nil
 }
 
 func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
