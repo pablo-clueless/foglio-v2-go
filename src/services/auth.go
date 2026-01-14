@@ -103,20 +103,20 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 	}
 
 	go func() {
-		err := lib.SendEmail(lib.EmailDto{
+		err := lib.GetEmailService().SendEmailSimple(lib.EmailDto{
 			To:       []string{user.Email},
-			Subject:  "Welcome",
-			Template: "welcome",
+			Subject:  "Verify Your Email",
+			Template: "verification",
 			Data: map[string]interface{}{
 				"Name":  user.Name,
 				"Email": user.Email,
-				"Otp":   user.Otp,
+				"Otp":   otp,
 			},
 		})
 		if err != nil {
-			log.Printf("Failed to send email: %v", err)
+			log.Printf("Failed to send verification email: %v", err)
 		} else {
-			log.Printf("Email sent to: %v", user.Email)
+			log.Printf("Verification email sent to: %v", user.Email)
 		}
 	}()
 
@@ -145,7 +145,7 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 		}
 
 		go func() {
-			err = lib.SendEmail(lib.EmailDto{
+			err = lib.GetEmailService().SendEmailSimple(lib.EmailDto{
 				To:       []string{user.Email},
 				Subject:  "Verification",
 				Template: "verification",
@@ -195,7 +195,7 @@ func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
 	}
 
 	go func() {
-		err := lib.SendEmail(lib.EmailDto{
+		err := lib.GetEmailService().SendEmailSimple(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Account Verified",
 			Template: "verified",
@@ -274,7 +274,7 @@ func (s *AuthService) ForgotPassword(email string) error {
 	url := lib.GenerateUrl(client, token)
 
 	go func() {
-		err := lib.SendEmail(lib.EmailDto{
+		err := lib.GetEmailService().SendEmailSimple(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Forgot Password",
 			Template: "forgot-password",
@@ -323,7 +323,7 @@ func (s *AuthService) ResetPassword(payload dto.ResetPasswordDto) error {
 	}
 
 	go func() {
-		err := lib.SendEmail(lib.EmailDto{
+		err := lib.GetEmailService().SendEmailSimple(lib.EmailDto{
 			To:       []string{user.Email},
 			Subject:  "Reset Password",
 			Template: "reset-password",
