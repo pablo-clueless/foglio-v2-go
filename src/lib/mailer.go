@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"html/template"
+	"log"
 	"net"
 	"path/filepath"
 	"runtime"
@@ -197,7 +198,13 @@ func (es *EmailService) testConnection(_ context.Context) error {
 	if err != nil {
 		return fmt.Errorf("cannot connect to SMTP server: %w", err)
 	}
-	defer conn.Close()
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}()
+
 	if es.dialer.TLSConfig != nil {
 		if err := conn.(*net.TCPConn).SetDeadline(time.Now().Add(es.timeout)); err != nil {
 			return fmt.Errorf("failed to set deadline: %w", err)
