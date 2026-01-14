@@ -1,7 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Datarango  Api Gateway",
+    "title": "Foglio",
+    "description": "Professional networking and job platform API",
     "contact": {}
   },
   "paths": {
@@ -11,6 +12,16 @@
         "responses": {
           "200": {
             "description": "Service is healthy"
+          }
+        }
+      }
+    },
+    "/api/v2/test/email": {
+      "get": {
+        "summary": "Test endpoint",
+        "responses": {
+          "200": {
+            "description": "Test endpoint response"
           }
         }
       }

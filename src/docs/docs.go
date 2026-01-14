@@ -48,6 +48,18 @@ const template = `{
                 }
             }
         },
+        "/api/v2/test/email": {
+            "get": {
+                "summary": "Test endpoint",
+                "description": "Test email service",
+                "tags": ["Test", "Email"],
+                "responses": {
+                    "200": {
+                        "description": "Test endpoint response"
+                    }
+                }
+            }
+        },
         "/api/v2/auth/signup": {
             "post": {
                 "summary": "User signup",

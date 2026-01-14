@@ -23,6 +23,7 @@ type Config struct {
 	CookieDomain         string
 	CurrentUser          string
 	CurrentUserId        string
+	Environment          string
 	GithubClientId       string
 	GithubClientSecret   string
 	GithubPrivateKey     string
@@ -52,13 +53,14 @@ func InitializeConfig() {
 		AccessTokenExpiresIn: time.Minute * 30,
 		AppEmail:             os.Getenv("APP_EMAIL"),
 		ApiUrl:               os.Getenv("API_URL"),
-		ClientUrl:            "CLIENT_URL",
+		ClientUrl:            os.Getenv("CLIENT_URL"),
 		CloudinaryKey:        os.Getenv("CLOUDINARY_KEY"),
 		CloudinaryName:       os.Getenv("CLOUDINARY_NAME"),
 		CloudinarySecret:     os.Getenv("CLOUDINARY_SECRET"),
 		CookieDomain:         os.Getenv("COOKIE_DOMAIN"),
 		CurrentUserId:        "CURRENT_USER_ID",
 		CurrentUser:          "CURRENT_USER",
+		Environment:          os.Getenv("ENVIRONMENT"),
 		GithubClientId:       os.Getenv("GITHUB_CLIENT_ID"),
 		GithubClientSecret:   os.Getenv("GITHUB_CLIENT_SECRET"),
 		GithubPrivateKey:     os.Getenv("GITHUB_CLIENT_PRIVATE_KEY"),
@@ -67,7 +69,7 @@ func InitializeConfig() {
 		GoogleClientSecret:   os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectUrl:    os.Getenv("GOOGLE_REDIRECT_URL"),
 		IsDevMode:            os.Getenv("GO_ENV") == "development",
-		JWTTokenSecret:       []byte(os.Getenv("JWT_TOKEN_SECRET")),
+		JWTTokenSecret:       []byte(os.Getenv("JWT_SECRET")),
 		MaxFileSize:          10 << 20, // default 10 MB
 		Port:                 os.Getenv("PORT"),
 		PostgresUrl:          os.Getenv("POSTGRES_URL"),
@@ -89,6 +91,7 @@ func InitializeConfig() {
 			{Endpoint: "/api/v2/ws/send-notification", Method: http.MethodPost},
 			{Endpoint: "/api/v2/ws/broadcast", Method: http.MethodPost},
 			{Endpoint: "/api/v2/health", Method: http.MethodGet},
+			{Endpoint: "/api/v2/test/*", Method: http.MethodGet},
 			{Endpoint: "/api/v2/auth/signup", Method: http.MethodPost},
 			{Endpoint: "/api/v2/auth/signin", Method: http.MethodPost},
 			{Endpoint: "/api/v2/auth/verification", Method: http.MethodPost},

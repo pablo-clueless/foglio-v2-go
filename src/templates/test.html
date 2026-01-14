@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Email Service Test</title>
+  <meta name="x-application" content="Foglio Email Service Test" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f7fb;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    table {
+      border-collapse: collapse !important;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+    }
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body style="background:#f5f7fb; margin:0; padding:24px;">
+  <center>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px; margin:0 auto;">
+      <tr>
+        <td style="padding:0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+            style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(16,24,40,0.08);">
+            <tr>
+              <td style="padding:20px 24px; border-bottom:1px solid #e5e7eb; text-align:center;">
+                <div style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:14px; color:#6b7280;">Foglio
+                  Email Service</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 32px 16px;">
+                <h1
+                  style="margin:0 0 12px; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:22px; line-height:28px; color:#111827;">
+                  Test Delivery: Hello {{.Name}}
+                </h1>
+                <p
+                  style="margin:0 0 16px; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:15px; line-height:22px; color:#4b5563;">
+                  This message was sent to verify that our email service can deliver to your inbox and render dynamic
+                  fields correctly.
+                </p>
+                <div
+                  style="margin:16px 0; padding:12px 14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:14px; color:#374151;">
+                  Recipient: <strong style="color:#111827;">{{.Email}}</strong>
+                </div>
+                <p
+                  style="margin:0 0 16px; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:15px; line-height:22px; color:#4b5563;">
+                  Use the test code below to confirm end-to-end substitution and delivery:
+                </p>
+                <div
+                  style="margin:20px 0; padding:24px; text-align:center; border:2px dashed #d1d5db; border-radius:10px; background:#f9fafb;">
+                  <div
+                    style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:28px; font-weight:700; letter-spacing:0.18em; color:#111827;">
+                    {{.Otp}}
+                  </div>
+                  <div
+                    style="margin-top:8px; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:12px; color:#6b7280;">
+                    This code is for testing only and expires in 10 minutes.
+                  </div>
+                </div>
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 24px;">
+                  <tr>
+                    <td align="center">
+                      <a href="{{.ConfirmURL}}"
+                        style="display:inline-block; padding:12px 20px; background:#2563eb; color:#ffffff; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:15px; font-weight:600; border-radius:8px;">
+                        Confirm Delivery
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding-top:10px;">
+                      <a href="{{.SupportURL}}"
+                        style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:13px; color:#6b7280;">
+                        Report an issue
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <div
+                  style="margin:0 0 12px; padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                  <div
+                    style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:13px; color:#6b7280; margin-bottom:8px;">
+                    Delivery Metadata
+                  </div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#374151; padding:4px 0; width:35%;">
+                        Message ID</td>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#111827; padding:4px 0;">
+                        {{.MessageID}}</td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#374151; padding:4px 0;">
+                        Environment</td>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#111827; padding:4px 0;">
+                        {{.Environment}}</td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#374151; padding:4px 0;">
+                        Sent At</td>
+                      <td
+                        style="font-family:Consolas, Monaco, Menlo, 'Courier New', monospace; font-size:12px; color:#111827; padding:4px 0;">
+                        {{.SentAt}}</td>
+                    </tr>
+                  </table>
+                </div>
+                <p
+                  style="margin:16px 0 0; font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:13px; line-height:20px; color:#6b7280;">
+                  If you did not expect this test email, you can safely ignore or delete it.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 24px; border-top:1px solid #e5e7eb; text-align:center; background:#f9fafb;">
+                <div style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:12px; color:#6b7280;">&copy;
+                  2025 Foglio</div>
+                <div
+                  style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:11px; color:#9ca3af; margin-top:4px;">
+                  Lagos, Nigeria</div>
+                <div
+                  style="font-family:Segoe UI, Helvetica, Arial, sans-serif; font-size:11px; color:#9ca3af; margin-top:8px;">
+                  Test links: <a href="{{.ConfirmURL}}" style="color:#2563eb;">Confirm</a> • <a href="{{.SupportURL}}"
+                    style="color:#2563eb;">Support</a>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <img src="{{.TrackingPixelURL}}" width="1" height="1" alt=""
+            style="display:block; border:0; outline:none; text-decoration:none; width:1px; height:1px;" />
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+
+</html>

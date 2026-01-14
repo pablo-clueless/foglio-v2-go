@@ -35,11 +35,11 @@ func main() {
 
 	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
 
-	if config.AppConfig.IsDevMode {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	// if config.AppConfig.IsDevMode {
+	// 	gin.SetMode(gin.DebugMode)
+	// } else {
+	// 	gin.SetMode(gin.ReleaseMode)
+	// }
 
 	app := gin.Default()
 
@@ -110,6 +110,7 @@ func main() {
 	routes.UserRoutes(router)
 	routes.JobRoutes(router)
 	routes.SelfRoutes(router)
+	routes.TestingRoutes(router)
 	routes.NotificationRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 

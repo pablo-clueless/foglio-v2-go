@@ -26,8 +26,8 @@ type EmailDto struct {
 }
 
 var (
-	emailService *EmailService
-	once         sync.Once
+	service *EmailService
+	once    sync.Once
 )
 
 func getTemplatesDir() string {
@@ -38,7 +38,7 @@ func getTemplatesDir() string {
 
 func GetEmailService() *EmailService {
 	once.Do(func() {
-		emailService = &EmailService{
+		service = &EmailService{
 			templates:    make(map[string]*template.Template),
 			templatesDir: getTemplatesDir(),
 			dialer: gomail.NewDialer(
@@ -49,7 +49,7 @@ func GetEmailService() *EmailService {
 			),
 		}
 	})
-	return emailService
+	return service
 }
 
 func (es *EmailService) getTemplate(templateName string) (*template.Template, error) {

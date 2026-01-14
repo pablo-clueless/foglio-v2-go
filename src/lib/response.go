@@ -27,15 +27,15 @@ type APIResponse struct {
 }
 
 const (
-	NotFoundCode         = "RESOURCE_NOT_FOUND"
-	UserNotFoundCode     = "USER_NOT_FOUND"
-	ProductNotFoundCode  = "PRODUCT_NOT_FOUND"
-	OrderNotFoundCode    = "ORDER_NOT_FOUND"
-	CategoryNotFoundCode = "CATEGORY_NOT_FOUND"
-	ValidationErrorCode  = "VALIDATION_ERROR"
-	InternalErrorCode    = "INTERNAL_ERROR"
-	UnauthorizedCode     = "UNAUTHORIZED"
-	ForbiddenCode        = "FORBIDDEN"
+	NotFoundCode            = "RESOURCE_NOT_FOUND"
+	UserNotFoundCode        = "USER_NOT_FOUND"
+	ProductNotFoundCode     = "PRODUCT_NOT_FOUND"
+	OrderNotFoundCode       = "ORDER_NOT_FOUND"
+	CategoryNotFoundCode    = "CATEGORY_NOT_FOUND"
+	ValidationErrorCode     = "VALIDATION_ERROR"
+	InternalServerErrorCode = "INTERNAL_SERVER_ERROR"
+	UnauthorizedCode        = "UNAUTHORIZED"
+	ForbiddenCode           = "FORBIDDEN"
 )
 
 func GlobalNotFound() gin.HandlerFunc {
@@ -133,7 +133,7 @@ func InternalServerError(ctx *gin.Context, message string) {
 		Success:   false,
 		Error:     "Internal Server Error",
 		Message:   message,
-		Code:      InternalErrorCode,
+		Code:      InternalServerErrorCode,
 		Path:      ctx.Request.URL.Path,
 		Method:    ctx.Request.Method,
 		Timestamp: time.Now().UTC(),
