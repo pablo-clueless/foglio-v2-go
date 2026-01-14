@@ -12,6 +12,7 @@ func AuthRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 
 	auth.POST("/signup", handler.CreateUser())
 	auth.POST("/signin", handler.Signin())
+	auth.POST("/request-verification", handler.RequestVerification())
 	auth.POST("/verification", handler.Verification())
 	auth.POST("/update-password", handler.ChangePassword())
 	auth.POST("/forgot-password", handler.ForgotPassword())
