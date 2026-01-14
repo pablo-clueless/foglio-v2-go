@@ -132,14 +132,18 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 		return nil, err
 	}
 
-	otp := lib.GenerateOtp()
-
-	user.Otp = otp
-	if err = s.database.Save(&user).Error; err != nil {
-		return nil, err
+	err = lib.ComparePassword(payload.Password, user.Password)
+	if err != nil {
+		return nil, errors.New("invalid password")
 	}
 
 	if !user.Verified {
+		otp := lib.GenerateOtp()
+		user.Otp = otp
+		if err = s.database.Save(&user).Error; err != nil {
+			return nil, err
+		}
+
 		go func() {
 			err = lib.SendEmail(lib.EmailDto{
 				To:       []string{user.Email},
@@ -148,7 +152,7 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 				Data: map[string]interface{}{
 					"Name":  user.Name,
 					"Email": user.Email,
-					"Otp":   user.Otp,
+					"Otp":   otp,
 				},
 			})
 			if err != nil {
@@ -157,12 +161,7 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 				log.Printf("Email sent to: %v", user.Email)
 			}
 		}()
-		return nil, errors.New("user not verified")
-	}
-
-	err = lib.ComparePassword(payload.Password, user.Password)
-	if err != nil {
-		return nil, errors.New("invalid password")
+		return nil, errors.New("user not verified. a verification mail has been sent to your email")
 	}
 
 	token, err := lib.GenerateToken(user.ID)

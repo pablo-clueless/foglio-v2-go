@@ -40,8 +40,13 @@ func InitializeDatabase() error {
 			return
 		}
 
+		logLevel := logger.Error
+		if config.AppConfig.IsDevMode {
+			logLevel = logger.Info
+		}
+
 		database, err := gorm.Open(postgres.Open(url), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info),
+			Logger: logger.Default.LogMode(logLevel),
 		})
 		if err != nil {
 			initErr = err
