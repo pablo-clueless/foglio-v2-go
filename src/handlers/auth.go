@@ -72,6 +72,26 @@ func (h *AuthHandler) Signin() gin.HandlerFunc {
 	}
 }
 
+func (h *AuthHandler) RequestVerification() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var email string
+
+		if err := ctx.ShouldBindQuery(&email); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		user, err := h.service.RequestVerification(email)
+		ctx.SetCookie("verification_email", user.Email, 1800, "/", "localhost", false, true)
+		if err != nil {
+			lib.InternalServerError(ctx, err.Error())
+			return
+		}
+
+		lib.Success(ctx, "", user)
+	}
+}
+
 func (h *AuthHandler) Verification() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var payload dto.VerificationDto
