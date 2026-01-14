@@ -12,6 +12,9 @@ dev:
 build:
 	go build -buildvcs=false -o foglio-v2 main.go
 
+start:
+	go run main.go
+
 test:
 	go test ./...
 
