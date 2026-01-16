@@ -30,13 +30,15 @@ type Notification struct {
 	Data      map[string]any   `gorm:"type:jsonb" json:"data"`
 }
 
-func (n *Notification) BeforeCreate(tx *gorm.DB) {
+func (n *Notification) BeforeCreate(tx *gorm.DB) error {
 	now := time.Now()
 	n.CreatedAt = now
 	n.UpdatedAt = now
+	return nil
 }
 
-func (n *Notification) BeforeUpdate(tx *gorm.DB) {
+func (n *Notification) BeforeUpdate(tx *gorm.DB) error {
 	now := time.Now()
 	n.UpdatedAt = now
+	return nil
 }
