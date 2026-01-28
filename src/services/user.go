@@ -39,9 +39,10 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 	if q.UserType != nil && strings.TrimSpace(*q.UserType) != "" {
 		userType := strings.ToLower(strings.TrimSpace(*q.UserType))
 		if userType != "all" {
-			if userType == "recruiter" {
+			switch userType {
+			case "recruiter":
 				query = query.Where("is_recruiter = ?", true)
-			} else if userType == "talent" || userType == "talents" {
+			case "talent", "talents":
 				query = query.Where("is_recruiter = ?", false)
 			}
 		}
