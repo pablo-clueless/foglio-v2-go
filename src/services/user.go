@@ -21,36 +21,30 @@ func NewUserService(database *gorm.DB) *UserService {
 
 func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedResponse[models.User], error) {
 	q := normalizeUserQuery(params)
-	if q.Limit <= 0 {
-		q.Limit = 10
-	}
-	if q.Page <= 0 {
-		q.Page = 1
-	}
 
 	var users []models.User
 	var totalItems int64
-
 	query := s.database.Model(&models.User{})
 
-	if q.Username != "" && strings.TrimSpace(q.Username) != "" {
-		username := "%" + strings.ToLower(strings.TrimSpace(q.Username)) + "%"
-		query = query.Where("LOWER(username) LIKE ?", username)
+	if q.Query != nil && strings.TrimSpace(*q.Query) != "" {
+		searchTerm := strings.ToLower(strings.TrimSpace(*q.Query))
+		query = query.Where(
+			s.database.Where("LOWER(location) LIKE ?", "%"+searchTerm+"%").
+				Or("LOWER(?) = ANY (SELECT LOWER(unnest(experiences)))", searchTerm).
+				Or("LOWER(?) = ANY (SELECT LOWER(unnest(languages)))", searchTerm).
+				Or("LOWER(?) = ANY (SELECT LOWER(unnest(skills)))", searchTerm),
+		)
 	}
 
-	if q.Language != "" && strings.TrimSpace(q.Language) != "" {
-		language := "%" + strings.ToLower(strings.TrimSpace(q.Language)) + "%"
-		query = query.Where("LOWER(?) = ANY (SELECT LOWER(lang) FROM unnest(languages) AS lang)", language)
-	}
-
-	if q.Location != "" && strings.TrimSpace(q.Location) != "" {
-		location := "%" + strings.ToLower(strings.TrimSpace(q.Location)) + "%"
-		query = query.Where("LOWER(location) LIKE ?", location)
-	}
-
-	if q.Skill != "" && strings.TrimSpace(q.Skill) != "" {
-		skill := "%" + strings.ToLower(strings.TrimSpace(q.Skill)) + "%"
-		query = query.Where("LOWER(?) = ANY (SELECT LOWER(skill) FROM unnest(skills) AS skill)", skill)
+	if q.UserType != nil && strings.TrimSpace(*q.UserType) != "" {
+		userType := strings.ToLower(strings.TrimSpace(*q.UserType))
+		if userType != "all" {
+			if userType == "recruiter" {
+				query = query.Where("is_recruiter = ?", true)
+			} else if userType == "talent" || userType == "talents" {
+				query = query.Where("is_recruiter = ?", false)
+			}
+		}
 	}
 
 	if err := query.Count(&totalItems).Error; err != nil {
@@ -64,8 +58,16 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 	}
 
 	offset := (q.Page - 1) * q.Limit
-
-	if err := query.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Offset(offset).Order("created_at DESC").Limit(q.Limit).
+	if err := query.
+		Preload("Skills").
+		Preload("Projects").
+		Preload("Experiences").
+		Preload("Education").
+		Preload("Certifications").
+		Preload("Languages").
+		Offset(offset).
+		Order("created_at DESC").
+		Limit(q.Limit).
 		Find(&users).Error; err != nil {
 		return nil, err
 	}

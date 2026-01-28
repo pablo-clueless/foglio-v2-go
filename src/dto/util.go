@@ -7,10 +7,8 @@ type Pagination struct {
 
 type UserPagination struct {
 	Pagination
-	Username string `json:"username"`
-	Language string `json:"language"`
-	Location string `json:"location"`
-	Skill    string `json:"skill"`
+	Query    *string `json:"query"`
+	UserType *string `json:"user_type"`
 }
 
 type JobPagination struct {
