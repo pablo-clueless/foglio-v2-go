@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -8,35 +10,38 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name           string          `gorm:"not null" json:"name"`
-	Username       string          `gorm:"uniqueIndex;not null" json:"username"`
-	Email          string          `gorm:"uniqueIndex;not null" json:"email"`
-	Password       string          `gorm:"null" json:"-"`                   // Nullable for OAuth users
-	Provider       string          `gorm:"default:'local'" json:"provider"` // local, google, github
-	ProviderID     string          `gorm:"null" json:"-"`                   // Provider's user ID
-	Phone          *string         `json:"phone"`
-	Role           *string         `json:"role"`
-	Headline       *string         `json:"headline"`
-	Location       *string         `json:"location"`
-	Image          *string         `json:"image"`
-	Summary        string          `gorm:"not null" json:"summary"`
-	CompanyID      *uuid.UUID      `gorm:"type:uuid;index" json:"company_id,omitempty"`
-	Company        *Company        `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
-	Skills         []Skill         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"skills,"`
-	Projects       []Project       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
-	Experiences    []Experience    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
-	Education      []Education     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
-	Certifications []Certification `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
-	Languages      []Language      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
-	IsAdmin        bool            `json:"is_admin"`
-	IsRecruiter    bool            `json:"is_recruiter"`
-	IsPremium      bool            `json:"is_premium"`
-	CreatedAt      time.Time       `json:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt  `gorm:"index" json:"-"`
-	Verified       bool            `json:"verified"`
-	Otp            string          `json:"otp"`
+	ID                  uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name                string             `gorm:"not null" json:"name"`
+	Username            string             `gorm:"uniqueIndex;not null" json:"username"`
+	Email               string             `gorm:"uniqueIndex;not null" json:"email"`
+	Password            string             `gorm:"null" json:"-"`                   // Nullable for OAuth users
+	Provider            string             `gorm:"default:'local'" json:"provider"` // local, google, github
+	ProviderID          string             `gorm:"null" json:"-"`                   // Provider's user ID
+	Role                *string            `json:"role"`
+	Headline            *string            `json:"headline"`
+	Phone               *string            `gorm:"index" json:"phone"`
+	Location            *string            `gorm:"index" json:"location"`
+	Image               *string            `json:"image"`
+	Summary             *string            `gorm:"null" json:"summary"`
+	SocialMedia         *SocialMedia       `gorm:"type:jsonb;serializer:json" json:"social_media,omitempty"`
+	CompanyID           *uuid.UUID         `gorm:"type:uuid;index" json:"company_id,omitempty"`
+	Company             *Company           `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
+	CurrentSubscription *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
+	SubscriptionHistory []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
+	Skills              []Skill            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"skills,"`
+	Projects            []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
+	Experiences         []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
+	Education           []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
+	Certifications      []Certification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
+	Languages           []Language         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
+	IsAdmin             bool               `json:"is_admin"`
+	IsRecruiter         bool               `json:"is_recruiter"`
+	IsPremium           bool               `json:"is_premium"`
+	CreatedAt           time.Time          `json:"created_at"`
+	UpdatedAt           time.Time          `json:"updated_at"`
+	DeletedAt           gorm.DeletedAt     `gorm:"index" json:"-"`
+	Verified            bool               `json:"verified"`
+	Otp                 string             `json:"otp"`
 }
 
 type Company struct {
@@ -180,6 +185,16 @@ type EducationHighlight struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+type SocialMedia struct {
+	LinkedIn  *string `json:"linkedin,omitempty"`
+	GitHub    *string `json:"github,omitempty"`
+	Twitter   *string `json:"twitter,omitempty"`
+	Instagram *string `json:"instagram,omitempty"`
+	Facebook  *string `json:"facebook,omitempty"`
+	YouTube   *string `json:"youtube,omitempty"`
+	Blog      *string `json:"blog,omitempty"`
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) error {
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
@@ -200,4 +215,57 @@ func (c *Company) BeforeCreate(tx *gorm.DB) error {
 func (c *Company) BeforeUpdate(tx *gorm.DB) error {
 	c.UpdatedAt = time.Now()
 	return nil
+}
+
+func (sm *SocialMedia) Scan(value interface{}) error {
+	return json.Unmarshal(value.([]byte), sm)
+}
+
+func (sm SocialMedia) Value() (driver.Value, error) {
+	return json.Marshal(sm)
+}
+
+func (u *User) IsSubscriptionActive() bool {
+	if u.CurrentSubscription == nil {
+		return false
+	}
+	return u.CurrentSubscription.IsActive &&
+		u.CurrentSubscription.Status == "active" &&
+		u.CurrentSubscription.CurrentPeriodEnd.After(time.Now())
+}
+
+func (u *User) GetSubscriptionTier() SubscriptionTier {
+	if u.IsSubscriptionActive() && u.CurrentSubscription.Subscription != nil {
+		return u.CurrentSubscription.Subscription.Tier
+	}
+	return TierFree
+}
+
+func (u *User) CanAddProject() bool {
+	if !u.IsSubscriptionActive() {
+		return len(u.Projects) < 3
+	}
+
+	if u.CurrentSubscription.Subscription != nil {
+		return len(u.Projects) < u.CurrentSubscription.Subscription.MaxProjects
+	}
+	return false
+}
+
+func (u *User) CanAddExperience() bool {
+	if !u.IsSubscriptionActive() {
+		return len(u.Experiences) < 5
+	}
+
+	if u.CurrentSubscription.Subscription != nil {
+		return len(u.Experiences) < u.CurrentSubscription.Subscription.MaxExperiences
+	}
+	return false
+}
+
+func (u *User) IsInTrialPeriod() bool {
+	if u.CurrentSubscription == nil || u.CurrentSubscription.TrialEnd == nil {
+		return false
+	}
+	return time.Now().Before(*u.CurrentSubscription.TrialEnd)
 }

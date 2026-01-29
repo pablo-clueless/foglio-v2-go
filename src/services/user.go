@@ -115,16 +115,38 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 		return nil, err
 	}
 
-	user.Certifications = payload.Certifications
-	user.Experiences = payload.Experiences
-	user.Education = payload.Education
-	user.Languages = payload.Languages
-	user.Headline = payload.Headline
-	user.Location = payload.Location
-	user.Projects = payload.Projects
-	user.Phone = payload.Phone
-	if payload.Summary != nil && *payload.Summary != "" {
-		user.Summary = *payload.Summary
+	if payload.Headline != nil {
+		user.Headline = payload.Headline
+	}
+	if payload.Location != nil {
+		user.Location = payload.Location
+	}
+	if payload.Phone != nil {
+		user.Phone = payload.Phone
+	}
+	if payload.Summary != nil {
+		user.Summary = payload.Summary
+	}
+	if payload.SocialMedia != nil {
+		user.SocialMedia = payload.SocialMedia
+	}
+	if payload.Skills != nil {
+		user.Skills = payload.Skills
+	}
+	if payload.Projects != nil {
+		user.Projects = payload.Projects
+	}
+	if payload.Experiences != nil {
+		user.Experiences = payload.Experiences
+	}
+	if payload.Education != nil {
+		user.Education = payload.Education
+	}
+	if payload.Certifications != nil {
+		user.Certifications = payload.Certifications
+	}
+	if payload.Languages != nil {
+		user.Languages = payload.Languages
 	}
 
 	if err := s.database.Save(&user).Error; err != nil {
