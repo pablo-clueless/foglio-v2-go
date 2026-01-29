@@ -103,7 +103,7 @@ func (h *UserHandler) UpdateAvatar() gin.HandlerFunc {
 			return
 		}
 		defer func() {
-			if err := file.Close(); err != nil {
+			if err = file.Close(); err != nil {
 				log.Printf("Error closing file: %v", err)
 			}
 		}()

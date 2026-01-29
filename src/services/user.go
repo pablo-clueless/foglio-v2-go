@@ -137,7 +137,7 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 
 	if payload.Skills != nil {
 		for i := range payload.Skills {
-			payload.Skills[i].UserID = user.ID
+			payload.Skills[i] = user.Skills[i]
 		}
 		if err := s.database.Model(&user).Association("Skills").Replace(payload.Skills); err != nil {
 			return nil, err
