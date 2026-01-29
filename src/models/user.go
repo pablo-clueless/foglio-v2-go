@@ -28,7 +28,7 @@ type User struct {
 	Company             *Company           `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
 	CurrentSubscription *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
 	SubscriptionHistory []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
-	Skills              []Skill            `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"skills,"`
+	Skills              []string           `gorm:"type:text[]" json:"skills"`
 	Projects            []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
 	Experiences         []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
 	Education           []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
@@ -129,15 +129,6 @@ type Language struct {
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
-}
-
-type Skill struct {
-	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	UserID    uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"`
-	Name      string         `gorm:"not null" json:"name"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type ProjectStack struct {
