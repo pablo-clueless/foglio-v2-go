@@ -35,12 +35,6 @@ func main() {
 
 	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
 
-	// if config.AppConfig.IsDevMode {
-	// 	gin.SetMode(gin.DebugMode)
-	// } else {
-	// 	gin.SetMode(gin.ReleaseMode)
-	// }
-
 	app := gin.Default()
 
 	docs.SetupSwagger(app)
@@ -112,6 +106,8 @@ func main() {
 	routes.SelfRoutes(router)
 	routes.TestingRoutes(router)
 	routes.NotificationRoutes(router)
+	routes.SubscriptionRoutes(router)
+	routes.PaystackRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 
 	server := &http.Server{
@@ -124,6 +120,7 @@ func main() {
 
 	if config.AppConfig.IsDevMode {
 		log.Printf("Server starting on port http://localhost:%s/%s", config.AppConfig.Port, config.AppConfig.Version)
+		log.Printf("Swagger docs at http://localhost:%s/swagger/index.html", config.AppConfig.Port)
 		log.Printf("CORS enabled for origins: %v", []string{"*"})
 	}
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

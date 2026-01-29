@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+type SchemaMigration struct {
+	ID        uint      `gorm:"primaryKey"`
+	Name      string    `gorm:"uniqueIndex;not null"`
+	AppliedAt time.Time `gorm:"not null"`
+}
 
 var (
 	client                    *gorm.DB
@@ -144,7 +151,19 @@ func EnableUUIDExtension(db *gorm.DB) error {
 }
 
 func runMigrations(db *gorm.DB) error {
-	log.Println("Starting database migrations...")
+	if err := db.AutoMigrate(&SchemaMigration{}); err != nil {
+		return fmt.Errorf("failed to create schema_migrations table: %w", err)
+	}
+
+	var appliedMigrations []SchemaMigration
+	if err := db.Find(&appliedMigrations).Error; err != nil {
+		return fmt.Errorf("failed to fetch applied migrations: %w", err)
+	}
+
+	appliedMap := make(map[string]bool)
+	for _, m := range appliedMigrations {
+		appliedMap[m.Name] = true
+	}
 
 	migrations := []struct {
 		name  string
@@ -168,19 +187,99 @@ func runMigrations(db *gorm.DB) error {
 		{"016_create_comments", &models.Comment{}},
 		{"017_create_reactions", &models.Reaction{}},
 		{"018_create_notifications", &models.Notification{}},
+		{"019_create_social_media", &models.SocialMedia{}},
+		{"021_create_subscription", &models.Subscription{}},
+		{"022_create_subscription_invoices", &models.SubscriptionInvoice{}},
+		{"023_create_user_subscriptions", &models.UserSubscription{}},
+		{"024_create_paystack_plans", &models.PaystackPlan{}},
 	}
 
+	pendingCount := 0
 	for _, migration := range migrations {
-		log.Printf("Running migration: %s", migration.name)
+		if !appliedMap[migration.name] {
+			pendingCount++
+		}
+	}
 
+	if pendingCount == 0 {
+		log.Println("No pending migrations")
+		return nil
+	}
+
+	log.Printf("Running %d pending migration(s)...", pendingCount)
+
+	for _, migration := range migrations {
+		if appliedMap[migration.name] {
+			continue
+		}
+
+		log.Printf("Applying migration: %s", migration.name)
 		if err := db.AutoMigrate(migration.model); err != nil {
 			return fmt.Errorf("migration %s failed: %w", migration.name, err)
 		}
 
-		log.Printf("Migration %s completed successfully", migration.name)
+		record := SchemaMigration{
+			Name:      migration.name,
+			AppliedAt: time.Now(),
+		}
+		if err := db.Create(&record).Error; err != nil {
+			return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
+		}
+
+		log.Printf("Migration %s applied successfully", migration.name)
 	}
 
 	log.Println("All migrations completed successfully")
+
+	// Run custom SQL migrations for constraints
+	if err := runCustomMigrations(db, appliedMap); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// runCustomMigrations runs SQL-based migrations that can't be done with AutoMigrate
+func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
+	customMigrations := []struct {
+		name string
+		sql  string
+	}{
+		{
+			name: "025_add_unique_active_subscription_index",
+			sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_subscriptions_user_active
+				  ON user_subscriptions (user_id)
+				  WHERE status = 'active' AND deleted_at IS NULL`,
+		},
+	}
+
+	for _, migration := range customMigrations {
+		if appliedMap[migration.name] {
+			continue
+		}
+
+		log.Printf("Applying custom migration: %s", migration.name)
+		if err := db.Exec(migration.sql).Error; err != nil {
+			// Ignore if index already exists
+			if !strings.Contains(err.Error(), "already exists") {
+				return fmt.Errorf("custom migration %s failed: %w", migration.name, err)
+			}
+		}
+
+		record := SchemaMigration{
+			Name:      migration.name,
+			AppliedAt: time.Now(),
+		}
+		if err := db.Create(&record).Error; err != nil {
+			// Ignore duplicate key error (already recorded)
+			if !strings.Contains(err.Error(), "duplicate key") {
+				return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
+			}
+		}
+
+		log.Printf("Custom migration %s applied successfully", migration.name)
+	}
+
 	return nil
 }
 
