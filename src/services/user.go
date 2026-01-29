@@ -32,7 +32,11 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 			s.database.Where("LOWER(location) LIKE ?", "%"+searchTerm+"%").
 				Or("LOWER(?) = ANY (SELECT LOWER(unnest(experiences)))", searchTerm).
 				Or("LOWER(?) = ANY (SELECT LOWER(unnest(languages)))", searchTerm).
-				Or("LOWER(?) = ANY (SELECT LOWER(unnest(skills)))", searchTerm),
+				Or("LOWER(?) = ANY (SELECT LOWER(unnest(skills)))", searchTerm).
+				Or("LOWER(?) = ANY (SELECT LOWER(role))", searchTerm).
+				Or("LOWER(role) LIKE ?", "%"+searchTerm+"%").
+				Or("LOWER(headline) LIKE ?", "%"+searchTerm+"%").
+				Or("LOWER(summary) LIKE ?", "%"+searchTerm+"%"),
 		)
 	}
 
