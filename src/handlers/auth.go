@@ -74,20 +74,19 @@ func (h *AuthHandler) Signin() gin.HandlerFunc {
 
 func (h *AuthHandler) RequestVerification() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var email string
-
-		if err := ctx.ShouldBindQuery(&email); err != nil {
-			lib.BadRequest(ctx, err.Error(), "400")
+		email := ctx.Query("email")
+		if email == "" {
+			lib.BadRequest(ctx, "email is required", "400")
 			return
 		}
 
 		user, err := h.service.RequestVerification(email)
-		ctx.SetCookie("verification_email", user.Email, 1800, "/", "localhost", false, true)
 		if err != nil {
 			lib.InternalServerError(ctx, err.Error())
 			return
 		}
 
+		ctx.SetCookie("verification_email", user.Email, 1800, "/", "localhost", false, true)
 		lib.Success(ctx, "", user)
 	}
 }
@@ -116,7 +115,7 @@ func (h *AuthHandler) ChangePassword() gin.HandlerFunc {
 		var payload dto.ChangePasswordDto
 		id := ctx.Param("id")
 
-		if err := ctx.ShouldBind(payload); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
@@ -135,7 +134,7 @@ func (h *AuthHandler) ForgotPassword() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var payload dto.ForgotPasswordDto
 
-		if err := ctx.ShouldBind(payload); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
@@ -153,10 +152,9 @@ func (h *AuthHandler) ForgotPassword() gin.HandlerFunc {
 
 func (h *AuthHandler) ResetPassword() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
 		var payload dto.ResetPasswordDto
 
-		if err := ctx.ShouldBind(payload); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
