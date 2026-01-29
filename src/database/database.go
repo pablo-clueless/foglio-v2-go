@@ -64,12 +64,10 @@ func InitializeDatabase() error {
 			return
 		}
 
-		if !config.AppConfig.IsDevMode {
-			if err := runMigrations(database); err != nil {
-				log.Printf("Failed to run migrations: %v", err)
-				initErr = err
-				return
-			}
+		if err := runMigrations(database); err != nil {
+			log.Printf("Failed to run migrations: %v", err)
+			initErr = err
+			return
 		}
 
 		if err := PingDatabase(database); err != nil {
@@ -146,6 +144,8 @@ func EnableUUIDExtension(db *gorm.DB) error {
 }
 
 func runMigrations(db *gorm.DB) error {
+	log.Println("Starting database migrations...")
+
 	migrations := []struct {
 		name  string
 		model interface{}
@@ -180,6 +180,7 @@ func runMigrations(db *gorm.DB) error {
 		log.Printf("Migration %s completed successfully", migration.name)
 	}
 
+	log.Println("All migrations completed successfully")
 	return nil
 }
 
