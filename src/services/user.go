@@ -130,30 +130,61 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 	if payload.SocialMedia != nil {
 		user.SocialMedia = payload.SocialMedia
 	}
-	if payload.Skills != nil {
-		user.Skills = payload.Skills
-	}
-	if payload.Projects != nil {
-		user.Projects = payload.Projects
-	}
-	if payload.Experiences != nil {
-		user.Experiences = payload.Experiences
-	}
-	if payload.Education != nil {
-		user.Education = payload.Education
-	}
-	if payload.Certifications != nil {
-		user.Certifications = payload.Certifications
-	}
-	if payload.Languages != nil {
-		user.Languages = payload.Languages
-	}
 
 	if err := s.database.Save(&user).Error; err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	if payload.Skills != nil {
+		for i := range payload.Skills {
+			payload.Skills[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Skills").Replace(payload.Skills); err != nil {
+			return nil, err
+		}
+	}
+	if payload.Projects != nil {
+		for i := range payload.Projects {
+			payload.Projects[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Projects").Replace(payload.Projects); err != nil {
+			return nil, err
+		}
+	}
+	if payload.Experiences != nil {
+		for i := range payload.Experiences {
+			payload.Experiences[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Experiences").Replace(payload.Experiences); err != nil {
+			return nil, err
+		}
+	}
+	if payload.Education != nil {
+		for i := range payload.Education {
+			payload.Education[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Education").Replace(payload.Education); err != nil {
+			return nil, err
+		}
+	}
+	if payload.Certifications != nil {
+		for i := range payload.Certifications {
+			payload.Certifications[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Certifications").Replace(payload.Certifications); err != nil {
+			return nil, err
+		}
+	}
+	if payload.Languages != nil {
+		for i := range payload.Languages {
+			payload.Languages[i].UserID = user.ID
+		}
+		if err := s.database.Model(&user).Association("Languages").Replace(payload.Languages); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetUser(id)
 }
 
 func (s *UserService) UpdateAvatar(id, imageUrl string) (*models.User, error) {
