@@ -777,6 +777,479 @@ const template = `{
                     }
                 }
             }
+        },
+        "/api/v2/subscriptions": {
+            "get": {
+                "summary": "List subscription tiers",
+                "description": "Get all available subscription tiers",
+                "tags": ["Subscriptions"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of subscription tiers"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create subscription tier",
+                "description": "Create a new subscription tier (admin only)",
+                "tags": ["Subscriptions"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["name", "type", "tier", "price", "billingCycleDays"],
+                            "properties": {
+                                "name": {"type": "string", "example": "Pro Plan"},
+                                "description": {"type": "string", "example": "Best for professionals"},
+                                "type": {"type": "string", "enum": ["monthly", "yearly", "lifetime"], "example": "monthly"},
+                                "tier": {"type": "string", "enum": ["free", "basic", "premium", "business"], "example": "premium"},
+                                "price": {"type": "number", "example": 9.99},
+                                "currency": {"type": "string", "example": "USD"},
+                                "billingCycleDays": {"type": "integer", "example": 30},
+                                "trialPeriodDays": {"type": "integer", "example": 14},
+                                "features": {"type": "object"},
+                                "sortOrder": {"type": "integer", "example": 1}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Subscription tier created"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/subscriptions/{id}": {
+            "get": {
+                "summary": "Get subscription tier",
+                "description": "Get subscription tier by ID",
+                "tags": ["Subscriptions"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Subscription UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription tier details"
+                    },
+                    "404": {
+                        "description": "Subscription not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update subscription tier",
+                "description": "Update subscription tier by ID (admin only)",
+                "tags": ["Subscriptions"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Subscription UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "description": {"type": "string"},
+                                "type": {"type": "string", "enum": ["monthly", "yearly", "lifetime"]},
+                                "tier": {"type": "string", "enum": ["free", "basic", "premium", "business"]},
+                                "price": {"type": "number"},
+                                "currency": {"type": "string"},
+                                "billingCycleDays": {"type": "integer"},
+                                "trialPeriodDays": {"type": "integer"},
+                                "features": {"type": "object"},
+                                "sortOrder": {"type": "integer"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription tier updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Subscription not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete subscription tier",
+                "description": "Delete subscription tier by ID (admin only)",
+                "tags": ["Subscriptions"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Subscription UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription tier deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Subscription not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions": {
+            "get": {
+                "summary": "Get user subscriptions",
+                "description": "Get current user's subscription history",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User's subscription list"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions/{id}": {
+            "get": {
+                "summary": "Get user subscription",
+                "description": "Get user subscription by ID",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "User Subscription UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User subscription details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Subscription not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions/{tierId}/subscribe": {
+            "post": {
+                "summary": "Subscribe to tier",
+                "description": "Subscribe current user to a subscription tier",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "tierId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Subscription Tier UUID"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Subscribed successfully"
+                    },
+                    "400": {
+                        "description": "User already has an active subscription"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions/{tierId}/upgrade": {
+            "put": {
+                "summary": "Upgrade subscription",
+                "description": "Upgrade current user's subscription to a higher tier",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "tierId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "New Subscription Tier UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription upgraded successfully"
+                    },
+                    "400": {
+                        "description": "No active subscription found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions/{tierId}/downgrade": {
+            "put": {
+                "summary": "Downgrade subscription",
+                "description": "Downgrade current user's subscription to a lower tier",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "tierId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "New Subscription Tier UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription downgraded successfully"
+                    },
+                    "400": {
+                        "description": "No active subscription found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/subscriptions/unsubscribe": {
+            "delete": {
+                "summary": "Unsubscribe",
+                "description": "Cancel current user's active subscription",
+                "tags": ["User Subscriptions"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Unsubscribed successfully"
+                    },
+                    "400": {
+                        "description": "No active subscription found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/initialize": {
+            "post": {
+                "summary": "Initialize payment",
+                "description": "Initialize a Paystack payment transaction for subscription",
+                "tags": ["Payments"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["subscription_tier_id"],
+                            "properties": {
+                                "subscription_tier_id": {
+                                    "type": "string",
+                                    "description": "UUID of the subscription tier to purchase",
+                                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                                },
+                                "callback_url": {
+                                    "type": "string",
+                                    "description": "URL to redirect after payment",
+                                    "example": "https://yoursite.com/payment/callback"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment initialized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "authorization_url": {
+                                    "type": "string",
+                                    "description": "URL to redirect user for payment"
+                                },
+                                "access_code": {
+                                    "type": "string"
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "Transaction reference for verification"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user already has subscription or invalid tier"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/verify": {
+            "get": {
+                "summary": "Verify payment",
+                "description": "Verify a Paystack payment transaction and activate subscription",
+                "tags": ["Payments"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "reference",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "Payment reference from Paystack"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment verified and subscription activated"
+                    },
+                    "400": {
+                        "description": "Payment not successful or already processed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/cancel": {
+            "delete": {
+                "summary": "Cancel subscription",
+                "description": "Cancel the user's active Paystack subscription",
+                "tags": ["Payments"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Subscription cancelled successfully"
+                    },
+                    "400": {
+                        "description": "No active subscription found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/webhook": {
+            "post": {
+                "summary": "Paystack webhook",
+                "description": "Webhook endpoint for Paystack events (charge.success, subscription.create, etc.)",
+                "tags": ["Payments"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "x-paystack-signature",
+                        "in": "header",
+                        "required": true,
+                        "type": "string",
+                        "description": "HMAC SHA512 signature for verification"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Webhook processed successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request body"
+                    },
+                    "401": {
+                        "description": "Invalid signature"
+                    }
+                }
+            }
         }
     }
 }`

@@ -35,6 +35,9 @@ type Config struct {
 	JWTTokenSecret       []byte
 	MaxFileSize          int
 	NonAuthRoutes        []APIRoute
+	PaystackSecretKey    string
+	PaystackPublicKey    string
+	PaystackWebhookSecret string
 	Port                 string
 	PostgresUrl          string
 	ProjectId            string
@@ -71,6 +74,9 @@ func InitializeConfig() {
 		IsDevMode:            os.Getenv("GO_ENV") == "development",
 		JWTTokenSecret:       []byte(os.Getenv("JWT_SECRET")),
 		MaxFileSize:          10 << 20, // default 10 MB
+		PaystackSecretKey:    os.Getenv("PAYSTACK_SECRET_KEY"),
+		PaystackPublicKey:    os.Getenv("PAYSTACK_PUBLIC_KEY"),
+		PaystackWebhookSecret: os.Getenv("PAYSTACK_WEBHOOK_SECRET"),
 		Port:                 os.Getenv("PORT"),
 		PostgresUrl:          os.Getenv("POSTGRES_URL"),
 		ProjectId:            os.Getenv("PROJECT_ID"),
@@ -105,6 +111,9 @@ func InitializeConfig() {
 			{Endpoint: "/api/v2/users/:id", Method: http.MethodGet},
 			{Endpoint: "/api/v2/jobs", Method: http.MethodGet},
 			{Endpoint: "/api/v2/jobs/:id", Method: http.MethodGet},
+			{Endpoint: "/api/v2/subscriptions", Method: http.MethodGet},
+			{Endpoint: "/api/v2/subscriptions/:id", Method: http.MethodGet},
+			{Endpoint: "/api/v2/payments/webhook", Method: http.MethodPost},
 		},
 	}
 }
