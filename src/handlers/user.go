@@ -78,7 +78,7 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 		var payload dto.UpdateUserDto
 		id := ctx.Param("id")
 
-		if err := ctx.ShouldBindQuery(&payload); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
