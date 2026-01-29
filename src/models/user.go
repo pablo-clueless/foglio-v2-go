@@ -16,6 +16,7 @@ type User struct {
 	Provider       string          `gorm:"default:'local'" json:"provider"` // local, google, github
 	ProviderID     string          `gorm:"null" json:"-"`                   // Provider's user ID
 	Phone          *string         `json:"phone"`
+	Role           *string         `json:"role"`
 	Headline       *string         `json:"headline"`
 	Location       *string         `json:"location"`
 	Image          *string         `json:"image"`
