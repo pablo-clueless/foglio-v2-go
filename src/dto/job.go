@@ -47,3 +47,11 @@ type JobSearch struct {
 	Page           *int     `json:"page,omitempty"`
 	Limit          *int     `json:"limit,omitempty"`
 }
+
+type ApplicationStatusDto struct {
+	Reason *string `json:"reason,omitempty"`
+}
+
+type CommentDto struct {
+	Content string `json:"content"`
+}

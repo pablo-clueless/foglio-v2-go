@@ -195,14 +195,14 @@ func (h *JobHandler) AcceptApplication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)
 		applicationId := ctx.Param("id")
-		var reason string
+		var payload dto.ApplicationStatusDto
 
-		if err := ctx.ShouldBindQuery(&reason); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		application, err := h.service.AcceptApplication(id, applicationId, &reason)
+		application, err := h.service.AcceptApplication(id, applicationId, payload.Reason)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
@@ -216,14 +216,14 @@ func (h *JobHandler) RejectApplication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)
 		applicationId := ctx.Param("id")
-		var reason string
+		var payload dto.ApplicationStatusDto
 
-		if err := ctx.ShouldBindQuery(&reason); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		application, err := h.service.AcceptApplication(id, applicationId, &reason)
+		application, err := h.service.RejectApplication(id, applicationId, payload.Reason)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
@@ -237,14 +237,14 @@ func (h *JobHandler) AddComment() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)
 		jobId := ctx.Param("id")
-		var comment string
+		var payload dto.CommentDto
 
-		if err := ctx.ShouldBind(&comment); err != nil {
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		created, err := h.service.AddComment(id, jobId, comment)
+		created, err := h.service.AddComment(id, jobId, payload.Content)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
