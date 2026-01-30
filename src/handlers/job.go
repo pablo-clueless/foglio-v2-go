@@ -233,6 +233,24 @@ func (h *JobHandler) RejectApplication() gin.HandlerFunc {
 	}
 }
 
+func (h *JobHandler) GetApplication() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		applicationId := ctx.Param("applicationId")
+
+		application, err := h.service.GetApplicationById(applicationId)
+		if err != nil {
+			if err.Error() == "application not found" {
+				lib.NotFound(ctx, err.Error(), "404")
+				return
+			}
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Application fetched successfully", application)
+	}
+}
+
 func (h *JobHandler) AddComment() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)

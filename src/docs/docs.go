@@ -302,6 +302,93 @@ const template = `{
                 }
             }
         },
+        "/api/v2/auth/request-verification": {
+            "post": {
+                "summary": "Request verification",
+                "description": "Request a new verification OTP",
+                "tags": ["Authentication"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "User email address"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Verification OTP sent"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/{provider}": {
+            "get": {
+                "summary": "Get OAuth URL",
+                "description": "Get OAuth authorization URL for provider",
+                "tags": ["Authentication"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "enum": ["google", "github"],
+                        "description": "OAuth provider"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OAuth URL generated"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/{provider}/callback": {
+            "get": {
+                "summary": "OAuth callback",
+                "description": "Handle OAuth provider callback",
+                "tags": ["Authentication"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "enum": ["google", "github"],
+                        "description": "OAuth provider"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "Authorization code"
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "type": "string",
+                        "description": "State parameter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
         "/api/v2/users/": {
             "get": {
                 "summary": "List users",
@@ -440,6 +527,71 @@ const template = `{
                 }
             }
         },
+        "/api/v2/me": {
+            "get": {
+                "summary": "Get current user",
+                "description": "Get authenticated user's profile",
+                "tags": ["Users"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "User profile"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/me/jobs": {
+            "get": {
+                "summary": "Get my jobs",
+                "description": "Get jobs created by authenticated user",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of user's jobs"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/user/profile": {
+            "get": {
+                "summary": "Get user profile",
+                "description": "Get authenticated user's profile (alias for /me)",
+                "tags": ["Users"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "User profile"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/api/v2/jobs/": {
             "post": {
                 "summary": "Create job",
@@ -511,23 +663,6 @@ const template = `{
                 "responses": {
                     "200": {
                         "description": "List of jobs"
-                    }
-                }
-            }
-        },
-        "/api/v2/jobs/me": {
-            "get": {
-                "summary": "List my jobs",
-                "description": "Get all jobs created by XXX authenticated user",
-                "tags": ["Jobs"],
-                "security": [{"Bearer": []}],
-                "produces": ["application/json"],
-                "responses": {
-                    "200": {
-                        "description": "List of user's jobs"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             }
@@ -654,6 +789,323 @@ const template = `{
                     },
                     "401": {
                         "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/user": {
+            "get": {
+                "summary": "Get my applications",
+                "description": "Get all job applications submitted by authenticated user",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of applications"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/job/{id}": {
+            "get": {
+                "summary": "Get applications for job",
+                "description": "Get all applications for a specific job (recruiter only)",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Job UUID"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of applications"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - not a recruiter"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/{applicationId}": {
+            "get": {
+                "summary": "Get application",
+                "description": "Get a specific job application by ID",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Application UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Application not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/{id}/accept": {
+            "post": {
+                "summary": "Accept application",
+                "description": "Accept a job application (recruiter only)",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Application UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string",
+                                    "description": "Optional reason/message"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application accepted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - not a recruiter"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/{id}/reject": {
+            "post": {
+                "summary": "Reject application",
+                "description": "Reject a job application (recruiter only)",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Application UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string",
+                                    "description": "Optional rejection reason"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application rejected"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - not a recruiter"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/{id}/comment": {
+            "post": {
+                "summary": "Add comment",
+                "description": "Add a comment to a job posting",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Job UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["content"],
+                            "properties": {
+                                "content": {
+                                    "type": "string",
+                                    "example": "Great opportunity!"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment added"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete comment",
+                "description": "Delete a comment from a job posting",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Comment UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Comment not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/{id}/reaction/{reaction}": {
+            "post": {
+                "summary": "Add reaction",
+                "description": "Add a reaction to a job posting",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Job UUID"
+                    },
+                    {
+                        "name": "reaction",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "enum": ["LIKE", "DISLIKE"],
+                        "description": "Reaction type"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reaction added"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/{id}/reaction": {
+            "delete": {
+                "summary": "Remove reaction",
+                "description": "Remove reaction from a job posting",
+                "tags": ["Jobs"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Job UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reaction removed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Reaction not found"
                     }
                 }
             }
