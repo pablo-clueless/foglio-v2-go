@@ -114,6 +114,9 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 		return nil, err
 	}
 
+	if payload.Name != nil {
+		user.Name = *payload.Name
+	}
 	if payload.Headline != nil {
 		user.Headline = payload.Headline
 	}
