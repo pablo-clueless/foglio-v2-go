@@ -33,6 +33,12 @@ func main() {
 		log.Fatal("Database error:", err)
 	}
 
+	if config.AppConfig.RunSeeds {
+		if err := database.RunSeeds(); err != nil {
+			log.Printf("Warning: Failed to run seeds: %v", err)
+		}
+	}
+
 	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
 
 	app := gin.Default()
