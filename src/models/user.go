@@ -183,6 +183,7 @@ type SocialMedia struct {
 	Twitter   *string `json:"twitter,omitempty"`
 	Instagram *string `json:"instagram,omitempty"`
 	Facebook  *string `json:"facebook,omitempty"`
+	Medium    *string `json:"medium,omitempty"`
 	YouTube   *string `json:"youtube,omitempty"`
 	Blog      *string `json:"blog,omitempty"`
 }
