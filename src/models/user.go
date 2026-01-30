@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +29,7 @@ type User struct {
 	Company             *Company           `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
 	CurrentSubscription *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
 	SubscriptionHistory []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
-	Skills              []string           `gorm:"type:text[]" json:"skills"`
+	Skills              pq.StringArray     `gorm:"type:text[]" json:"skills"`
 	Projects            []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
 	Experiences         []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
 	Education           []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`

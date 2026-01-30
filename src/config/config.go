@@ -42,7 +42,6 @@ type Config struct {
 	PostgresUrl          string
 	ProjectId            string
 	RedisUrl             string
-	RunSeeds             bool
 	SmtpHost             string
 	SmtpPort             int
 	SmtpUser             string
@@ -82,7 +81,6 @@ func InitializeConfig() {
 		PostgresUrl:          os.Getenv("POSTGRES_URL"),
 		ProjectId:            os.Getenv("PROJECT_ID"),
 		RedisUrl:             os.Getenv("REDIS_URL"),
-		RunSeeds:             os.Getenv("RUN_SEEDS") == "true",
 		SmtpHost:             os.Getenv("SMTP_HOST"),
 		SmtpPort:             func() int { p, _ := strconv.Atoi(os.Getenv("SMTP_PORT")); return p }(),
 		SmtpUser:             os.Getenv("SMTP_USER"),
