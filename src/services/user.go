@@ -6,6 +6,7 @@ import (
 	"foglio/v2/src/models"
 	"strings"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -136,7 +137,7 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 		user.SocialMedia = payload.SocialMedia
 	}
 	if payload.Skills != nil {
-		user.Skills = payload.Skills
+		user.Skills = pq.StringArray(payload.Skills)
 	}
 
 	if err := s.database.Save(&user).Error; err != nil {
