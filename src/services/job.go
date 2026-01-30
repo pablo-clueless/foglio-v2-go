@@ -590,6 +590,27 @@ func (s *JobService) RejectApplication(recruiterId, applicationId string, reason
 	return s.UpdateApplicationStatus(recruiterId, applicationId, "rejected", reason)
 }
 
+func (s *JobService) GetApplicationById(applicationId string) (*models.JobApplication, error) {
+	applicationUUID, err := uuid.Parse(applicationId)
+	if err != nil {
+		return nil, errors.New("invalid application ID")
+	}
+
+	var application models.JobApplication
+	if err := s.database.
+		Preload("Job").
+		Preload("Applicant").
+		Where("id = ?", applicationUUID).
+		First(&application).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("application not found")
+		}
+		return nil, err
+	}
+
+	return &application, nil
+}
+
 func (s *JobService) AddComment(userId, jobId string, content string) (*models.Comment, error) {
 	userUUID, err := uuid.Parse(userId)
 	if err != nil {
