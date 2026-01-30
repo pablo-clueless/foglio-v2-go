@@ -1802,6 +1802,142 @@ const template = `{
                     }
                 }
             }
+        },
+        "/api/v2/payments/methods": {
+            "get": {
+                "summary": "Get payment methods",
+                "description": "Get all saved payment methods for the authenticated user",
+                "tags": ["Payment Methods"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "List of payment methods"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Add payment method",
+                "description": "Initialize adding a new payment method (card)",
+                "tags": ["Payment Methods"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "callback_url": {
+                                    "type": "string",
+                                    "description": "URL to redirect after card validation"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Redirect URL for card validation"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/methods/{authCode}": {
+            "delete": {
+                "summary": "Remove payment method",
+                "description": "Remove a saved payment method",
+                "tags": ["Payment Methods"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "authCode",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Authorization code of the payment method"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment method removed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/invoices": {
+            "get": {
+                "summary": "Get invoices",
+                "description": "Get all invoices for the authenticated user",
+                "tags": ["Invoices"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invoices"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/payments/invoices/{id}": {
+            "get": {
+                "summary": "Get invoice",
+                "description": "Get invoice by ID",
+                "tags": ["Invoices"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Invoice UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Invoice not found"
+                    }
+                }
+            }
         }
     }
 }`
