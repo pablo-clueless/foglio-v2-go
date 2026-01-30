@@ -141,3 +141,136 @@ func (h *PaystackHandler) CancelSubscription() gin.HandlerFunc {
 		lib.Success(ctx, "Subscription cancelled successfully", nil)
 	}
 }
+
+// Payment Methods
+
+func (h *PaystackHandler) GetPaymentMethods() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
+		methods, err := h.service.GetPaymentMethods(userID)
+		if err != nil {
+			lib.InternalServerError(ctx, "Failed to fetch payment methods: "+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Payment methods fetched successfully", methods)
+	}
+}
+
+func (h *PaystackHandler) AddPaymentMethod() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
+		var payload dto.AddPaymentMethodDto
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
+			// Allow empty body
+			payload = dto.AddPaymentMethodDto{}
+		}
+
+		callbackURL := payload.CallbackURL
+		if callbackURL == "" {
+			callbackURL = config.AppConfig.ClientUrl + "/payment-methods/callback"
+		}
+
+		response, err := h.service.AddPaymentMethod(userID, callbackURL)
+		if err != nil {
+			lib.BadRequest(ctx, err.Error(), "")
+			return
+		}
+
+		lib.Success(ctx, "Redirect to complete card validation", response)
+	}
+}
+
+func (h *PaystackHandler) RemovePaymentMethod() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
+		authCode := ctx.Param("authCode")
+		if authCode == "" {
+			lib.BadRequest(ctx, "Authorization code is required", "")
+			return
+		}
+
+		if err := h.service.RemovePaymentMethod(userID, authCode); err != nil {
+			lib.BadRequest(ctx, err.Error(), "")
+			return
+		}
+
+		lib.Success(ctx, "Payment method removed successfully", nil)
+	}
+}
+
+// Invoices
+
+func (h *PaystackHandler) GetInvoices() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
+		var query dto.Pagination
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			query = dto.Pagination{Page: 1, Limit: 10}
+		}
+
+		invoices, total, err := h.service.GetInvoices(userID, query.Page, query.Limit)
+		if err != nil {
+			lib.InternalServerError(ctx, "Failed to fetch invoices: "+err.Error())
+			return
+		}
+
+		totalPages := int((total + int64(query.Limit) - 1) / int64(query.Limit))
+
+		lib.Success(ctx, "Invoices fetched successfully", map[string]interface{}{
+			"data":        invoices,
+			"total_items": total,
+			"total_pages": totalPages,
+			"page":        query.Page,
+			"limit":       query.Limit,
+		})
+	}
+}
+
+func (h *PaystackHandler) GetInvoice() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
+			lib.Unauthorized(ctx, "User not authenticated")
+			return
+		}
+
+		invoiceID := ctx.Param("id")
+		if invoiceID == "" {
+			lib.BadRequest(ctx, "Invoice ID is required", "")
+			return
+		}
+
+		invoice, err := h.service.GetInvoiceByID(userID, invoiceID)
+		if err != nil {
+			if err.Error() == "invoice not found" {
+				lib.NotFound(ctx, err.Error(), "")
+				return
+			}
+			lib.InternalServerError(ctx, "Failed to fetch invoice: "+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Invoice fetched successfully", invoice)
+	}
+}
