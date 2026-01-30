@@ -9,6 +9,7 @@ import (
 
 type EmploymentType string
 type ReactionType string
+type ApplicantStatus string
 
 const (
 	Dislike ReactionType = "DISLIKE"
@@ -22,6 +23,14 @@ const (
 	Temporary  EmploymentType = "TEMPORARY"
 	Internship EmploymentType = "INTERNSHIP"
 	Freelance  EmploymentType = "FREELANCE"
+)
+
+const (
+	Pending  ApplicantStatus = "PENDING"
+	Reviewed ApplicantStatus = "REVIEWED"
+	Accepted ApplicantStatus = "ACCEPTED"
+	Rejected ApplicantStatus = "REJECTED"
+	Hired    ApplicantStatus = "HIRED"
 )
 
 type Job struct {
@@ -75,20 +84,20 @@ type Reaction struct {
 }
 
 type JobApplication struct {
-	ID             uuid.UUID      `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	JobID          uuid.UUID      `json:"job_id" gorm:"type:uuid;not null;index"`
-	Job            Job            `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
-	ApplicantID    uuid.UUID      `json:"applicantId" gorm:"type:uuid;not null;index"`
-	Applicant      User           `json:"applicant" gorm:"foreignKey:ApplicantID;references:ID;constraint:OnDelete:CASCADE"`
-	Resume         string         `json:"resume" gorm:"not null"`
-	CoverLetter    *string        `json:"coverLetter,omitempty"`
-	Status         string         `json:"status" gorm:"not null;default:'pending'"`
-	SubmissionDate time.Time      `json:"submission_ate" gorm:"not null"`
-	LastUpdated    time.Time      `json:"last_updated" gorm:"not null"`
-	Notes          *string        `json:"notes,omitempty"`
-	CreatedAt      time.Time      `json:"-"`
-	UpdatedAt      time.Time      `json:"-"`
-	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
+	ID             uuid.UUID       `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	JobID          uuid.UUID       `json:"job_id" gorm:"type:uuid;not null;index"`
+	Job            Job             `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
+	ApplicantID    uuid.UUID       `json:"applicantId" gorm:"type:uuid;not null;index"`
+	Applicant      User            `json:"applicant" gorm:"foreignKey:ApplicantID;references:ID;constraint:OnDelete:CASCADE"`
+	Resume         string          `json:"resume" gorm:"not null"`
+	CoverLetter    *string         `json:"coverLetter,omitempty"`
+	Status         ApplicantStatus `json:"status" gorm:"not null;default:'pending'"`
+	SubmissionDate time.Time       `json:"submission_ate" gorm:"not null"`
+	LastUpdated    time.Time       `json:"last_updated" gorm:"not null"`
+	Notes          *string         `json:"notes,omitempty"`
+	CreatedAt      time.Time       `json:"-"`
+	UpdatedAt      time.Time       `json:"-"`
+	DeletedAt      gorm.DeletedAt  `json:"-" gorm:"index"`
 }
 
 func (j *Job) BeforeCreate(tx *gorm.DB) error {

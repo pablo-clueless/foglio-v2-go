@@ -850,6 +850,20 @@ const template = `{
                         "in": "query",
                         "type": "integer",
                         "description": "Items per page"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "type": "string",
+                        "enum": ["PENDING", "REVIEWED", "ACCEPTED", "REJECTED", "HIRED"],
+                        "description": "Filter by application status"
+                    },
+                    {
+                        "name": "submission_date",
+                        "in": "query",
+                        "type": "string",
+                        "format": "date",
+                        "description": "Filter by submission date (YYYY-MM-DD)"
                     }
                 ],
                 "responses": {
@@ -970,6 +984,92 @@ const template = `{
                 "responses": {
                     "200": {
                         "description": "Application rejected"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - not a recruiter"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/{id}/review": {
+            "post": {
+                "summary": "Mark application as reviewed",
+                "description": "Mark a job application as reviewed (recruiter only)",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Application UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string",
+                                    "description": "Optional notes"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Application marked as reviewed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - not a recruiter"
+                    }
+                }
+            }
+        },
+        "/api/v2/jobs/applications/{id}/hire": {
+            "post": {
+                "summary": "Hire applicant",
+                "description": "Mark applicant as hired (recruiter only)",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Application UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string",
+                                    "description": "Optional message to applicant"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Applicant hired"
                     },
                     "401": {
                         "description": "Unauthorized"
