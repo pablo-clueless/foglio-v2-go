@@ -16,5 +16,14 @@ func PaystackRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	payments.DELETE("/cancel", handler.CancelSubscription())
 	payments.POST("/webhook", handler.Webhook())
 
+	// Payment Methods
+	payments.GET("/methods", handler.GetPaymentMethods())
+	payments.POST("/methods", handler.AddPaymentMethod())
+	payments.DELETE("/methods/:authCode", handler.RemovePaymentMethod())
+
+	// Invoices
+	payments.GET("/invoices", handler.GetInvoices())
+	payments.GET("/invoices/:id", handler.GetInvoice())
+
 	return payments
 }
