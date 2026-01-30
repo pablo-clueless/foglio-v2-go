@@ -55,3 +55,9 @@ type ApplicationStatusDto struct {
 type CommentDto struct {
 	Content string `json:"content"`
 }
+
+type JobApplicationPagination struct {
+	Pagination
+	SubmissionDate *string `json:"submission_date"`
+	Status         *string `json:"status"`
+}

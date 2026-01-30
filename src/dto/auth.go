@@ -34,7 +34,7 @@ type UpdateUserDto struct {
 	Location       *string                `json:"location,omitempty"`
 	Summary        *string                `json:"summary,omitempty"`
 	SocialMedia    *models.SocialMedia    `json:"social_media,omitempty"`
-	Skills         []models.Skill         `json:"skills,omitempty"`
+	Skills         []string               `json:"skills,omitempty"`
 	Projects       []models.Project       `json:"projects,omitempty"`
 	Experiences    []models.Experience    `json:"experiences,omitempty"`
 	Education      []models.Education     `json:"education,omitempty"`

@@ -64,7 +64,6 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 
 	offset := (q.Page - 1) * q.Limit
 	if err := query.
-		Preload("Skills").
 		Preload("Projects").
 		Preload("Experiences").
 		Preload("Education").
@@ -94,7 +93,7 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 func (s *UserService) GetUser(idOrUsername string) (*models.User, error) {
 	var user *models.User
 
-	if err := s.database.Preload("Skills").Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Preload("Company").
+	if err := s.database.Preload("Projects").Preload("Experiences").Preload("Education").Preload("Certifications").Preload("Languages").Preload("Company").
 		Where("id = ? OR LOWER(username) = LOWER(?)", idOrUsername, idOrUsername).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
@@ -130,19 +129,15 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 	if payload.SocialMedia != nil {
 		user.SocialMedia = payload.SocialMedia
 	}
+	if payload.Skills != nil {
+		user.Skills = payload.Skills
+	}
 
 	if err := s.database.Save(&user).Error; err != nil {
 		return nil, err
 	}
 
-	if payload.Skills != nil {
-		for i := range payload.Skills {
-			payload.Skills[i].UserID = user.ID
-		}
-		if err := s.database.Model(&user).Association("Skills").Replace(payload.Skills); err != nil {
-			return nil, err
-		}
-	}
+	// Handle associations using GORM's Association API
 	if payload.Projects != nil {
 		for i := range payload.Projects {
 			payload.Projects[i].UserID = user.ID
