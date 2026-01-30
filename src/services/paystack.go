@@ -534,3 +534,225 @@ func (s *PaystackService) CancelUserSubscription(userID string) error {
 
 	return s.database.Save(&userSub).Error
 }
+
+func (s *PaystackService) GetPaymentMethods(userID string) ([]dto.PaymentMethodResponse, error) {
+	var userSub models.UserSubscription
+	err := s.database.Where("user_id = ?", userID).Order("created_at DESC").First(&userSub).Error
+	if err != nil {
+		return []dto.PaymentMethodResponse{}, nil
+	}
+
+	if userSub.PaystackCustomerID == nil || *userSub.PaystackCustomerID == "" {
+		return []dto.PaymentMethodResponse{}, nil
+	}
+
+	respBody, err := s.makeRequest("GET", "/customer/"+*userSub.PaystackCustomerID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result dto.PaystackResponse[dto.PaystackCustomerData]
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, err
+	}
+
+	if !result.Status {
+		return nil, errors.New(result.Message)
+	}
+
+	var methods []dto.PaymentMethodResponse
+	for i, auth := range result.Data.Authorizations {
+		methods = append(methods, dto.PaymentMethodResponse{
+			ID:                fmt.Sprintf("%d", i+1),
+			AuthorizationCode: auth.AuthorizationCode,
+			CardType:          auth.CardType,
+			Last4:             auth.Last4,
+			ExpMonth:          auth.ExpMonth,
+			ExpYear:           auth.ExpYear,
+			Bank:              auth.Bank,
+			Brand:             auth.Brand,
+			IsDefault:         i == 0,
+			Reusable:          auth.Reusable,
+		})
+	}
+
+	return methods, nil
+}
+
+func (s *PaystackService) AddPaymentMethod(userID, callbackURL string) (*dto.InitiatePaymentResponse, error) {
+	var user models.User
+	if err := s.database.First(&user, "id = ?", userID).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	reference := fmt.Sprintf("card_%s_%d", uuid.New().String()[:8], time.Now().Unix())
+
+	reqBody := dto.InitializeTransactionRequest{
+		Email:       user.Email,
+		Amount:      5000, // NGN 50 (minimal amount for card validation)
+		Currency:    "NGN",
+		Reference:   reference,
+		CallbackURL: callbackURL,
+		Channels:    []string{"card"},
+		Metadata: map[string]string{
+			"user_id": userID,
+			"type":    "card_validation",
+		},
+	}
+
+	respBody, err := s.makeRequest("POST", "/transaction/initialize", reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var result dto.PaystackResponse[dto.InitializeTransactionData]
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, err
+	}
+
+	if !result.Status {
+		return nil, errors.New(result.Message)
+	}
+
+	return &dto.InitiatePaymentResponse{
+		AuthorizationURL: result.Data.AuthorizationURL,
+		AccessCode:       result.Data.AccessCode,
+		Reference:        result.Data.Reference,
+	}, nil
+}
+
+func (s *PaystackService) RemovePaymentMethod(userID, authorizationCode string) error {
+	var userSub models.UserSubscription
+	err := s.database.Where("user_id = ?", userID).Order("created_at DESC").First(&userSub).Error
+	if err != nil {
+		return errors.New("no subscription found for user")
+	}
+
+	if userSub.PaystackCustomerID == nil || *userSub.PaystackCustomerID == "" {
+		return errors.New("no payment methods found")
+	}
+
+	reqBody := map[string]string{
+		"authorization_code": authorizationCode,
+	}
+
+	respBody, err := s.makeRequest("POST", "/customer/deactivate_authorization", reqBody)
+	if err != nil {
+		return err
+	}
+
+	var result dto.PaystackResponse[map[string]interface{}]
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return err
+	}
+
+	if !result.Status {
+		return errors.New(result.Message)
+	}
+
+	return nil
+}
+
+func (s *PaystackService) GetInvoices(userID string, page, limit int) ([]dto.InvoiceResponse, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	var userSubs []models.UserSubscription
+	if err := s.database.Where("user_id = ?", userID).Find(&userSubs).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if len(userSubs) == 0 {
+		return []dto.InvoiceResponse{}, 0, nil
+	}
+
+	var subIDs []uuid.UUID
+	for _, sub := range userSubs {
+		subIDs = append(subIDs, sub.ID)
+	}
+
+	var totalItems int64
+	s.database.Model(&models.SubscriptionInvoice{}).Where("user_subscription_id IN ?", subIDs).Count(&totalItems)
+
+	offset := (page - 1) * limit
+	var invoices []models.SubscriptionInvoice
+	if err := s.database.Where("user_subscription_id IN ?", subIDs).
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&invoices).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var response []dto.InvoiceResponse
+	for _, inv := range invoices {
+		var paidAt *string
+		if inv.PaidAt != nil {
+			paidAtStr := inv.PaidAt.Format(time.RFC3339)
+			paidAt = &paidAtStr
+		}
+
+		response = append(response, dto.InvoiceResponse{
+			ID:          inv.ID.String(),
+			Reference:   inv.PaystackReference,
+			Amount:      inv.AmountPaid,
+			Currency:    inv.Currency,
+			Status:      inv.Status,
+			PeriodStart: inv.PeriodStart.Format(time.RFC3339),
+			PeriodEnd:   inv.PeriodEnd.Format(time.RFC3339),
+			PaidAt:      paidAt,
+			InvoicePDF:  inv.InvoicePDF,
+			CreatedAt:   inv.CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	return response, totalItems, nil
+}
+
+func (s *PaystackService) GetInvoiceByID(userID, invoiceID string) (*dto.InvoiceResponse, error) {
+	invoiceUUID, err := uuid.Parse(invoiceID)
+	if err != nil {
+		return nil, errors.New("invalid invoice ID")
+	}
+
+	var userSubs []models.UserSubscription
+	if err := s.database.Where("user_id = ?", userID).Find(&userSubs).Error; err != nil {
+		return nil, err
+	}
+
+	var subIDs []uuid.UUID
+	for _, sub := range userSubs {
+		subIDs = append(subIDs, sub.ID)
+	}
+
+	var invoice models.SubscriptionInvoice
+	if err := s.database.Where("id = ? AND user_subscription_id IN ?", invoiceUUID, subIDs).First(&invoice).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invoice not found")
+		}
+		return nil, err
+	}
+
+	var paidAt *string
+	if invoice.PaidAt != nil {
+		paidAtStr := invoice.PaidAt.Format(time.RFC3339)
+		paidAt = &paidAtStr
+	}
+
+	return &dto.InvoiceResponse{
+		ID:          invoice.ID.String(),
+		Reference:   invoice.PaystackReference,
+		Amount:      invoice.AmountPaid,
+		Currency:    invoice.Currency,
+		Status:      invoice.Status,
+		PeriodStart: invoice.PeriodStart.Format(time.RFC3339),
+		PeriodEnd:   invoice.PeriodEnd.Format(time.RFC3339),
+		PaidAt:      paidAt,
+		InvoicePDF:  invoice.InvoicePDF,
+		CreatedAt:   invoice.CreatedAt.Format(time.RFC3339),
+	}, nil
+}

@@ -131,3 +131,52 @@ type InitiatePaymentResponse struct {
 type VerifyPaymentDto struct {
 	Reference string `json:"reference" binding:"required"`
 }
+
+// Payment Method DTOs
+
+type PaymentMethodResponse struct {
+	ID                string `json:"id"`
+	AuthorizationCode string `json:"authorization_code"`
+	CardType          string `json:"card_type"`
+	Last4             string `json:"last4"`
+	ExpMonth          string `json:"exp_month"`
+	ExpYear           string `json:"exp_year"`
+	Bank              string `json:"bank"`
+	Brand             string `json:"brand"`
+	IsDefault         bool   `json:"is_default"`
+	Reusable          bool   `json:"reusable"`
+}
+
+type AddPaymentMethodDto struct {
+	CallbackURL string `json:"callback_url,omitempty"`
+}
+
+type SetDefaultPaymentMethodDto struct {
+	AuthorizationCode string `json:"authorization_code" binding:"required"`
+}
+
+// Invoice DTOs
+
+type InvoiceResponse struct {
+	ID          string  `json:"id"`
+	Reference   string  `json:"reference"`
+	Amount      float64 `json:"amount"`
+	Currency    string  `json:"currency"`
+	Status      string  `json:"status"`
+	PeriodStart string  `json:"period_start"`
+	PeriodEnd   string  `json:"period_end"`
+	PaidAt      *string `json:"paid_at,omitempty"`
+	InvoicePDF  *string `json:"invoice_pdf,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+// Paystack Customer Authorization List Response
+
+type PaystackCustomerData struct {
+	ID             int                     `json:"id"`
+	CustomerCode   string                  `json:"customer_code"`
+	Email          string                  `json:"email"`
+	FirstName      string                  `json:"first_name"`
+	LastName       string                  `json:"last_name"`
+	Authorizations []PaystackAuthorization `json:"authorizations"`
+}
