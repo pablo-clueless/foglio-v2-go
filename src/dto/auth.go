@@ -28,6 +28,7 @@ type CreateUserDto struct {
 }
 
 type UpdateUserDto struct {
+	Name           *string                `json:"name,omitempty"`
 	Username       *string                `json:"username,omitempty"`
 	Phone          *string                `json:"phone,omitempty"`
 	Headline       *string                `json:"headline,omitempty"`
