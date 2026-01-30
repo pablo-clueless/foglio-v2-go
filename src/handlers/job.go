@@ -174,7 +174,7 @@ func (h *JobHandler) GetApplicationsByJob() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)
 		jobId := ctx.Param("id")
-		var query dto.Pagination
+		var query dto.JobApplicationPagination
 
 		if err := ctx.ShouldBindQuery(&query); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
@@ -230,6 +230,48 @@ func (h *JobHandler) RejectApplication() gin.HandlerFunc {
 		}
 
 		lib.Success(ctx, "Application rejected successfully", application)
+	}
+}
+
+func (h *JobHandler) ReviewApplication() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		applicationId := ctx.Param("id")
+		var payload dto.ApplicationStatusDto
+
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		application, err := h.service.ReviewApplication(id, applicationId, payload.Reason)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Application marked as reviewed", application)
+	}
+}
+
+func (h *JobHandler) HireApplication() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		applicationId := ctx.Param("id")
+		var payload dto.ApplicationStatusDto
+
+		if err := ctx.ShouldBindJSON(&payload); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		application, err := h.service.HireApplication(id, applicationId, payload.Reason)
+		if err != nil {
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Applicant hired successfully", application)
 	}
 }
 

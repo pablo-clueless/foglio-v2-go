@@ -389,7 +389,7 @@ func (s *JobService) GetApplicationsByUser(userId string, params dto.Pagination)
 	}, nil
 }
 
-func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.Pagination) (*dto.PaginatedResponse[models.JobApplication], error) {
+func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.JobApplicationPagination) (*dto.PaginatedResponse[models.JobApplication], error) {
 	if params.Limit <= 0 {
 		params.Limit = 10
 	}
@@ -430,6 +430,14 @@ func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.
 
 	query := s.database.Model(&models.JobApplication{}).Where("job_id = ?", jobUUID)
 
+	if params.Status != nil && *params.Status != "" {
+		query = query.Where("status = ?", *params.Status)
+	}
+
+	if params.SubmissionDate != nil && *params.SubmissionDate != "" {
+		query = query.Where("DATE(submission_date) = ?", *params.SubmissionDate)
+	}
+
 	if err := query.Count(&totalItems).Error; err != nil {
 		return &dto.PaginatedResponse[models.JobApplication]{
 			Data:       []models.JobApplication{},
@@ -463,7 +471,7 @@ func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.
 	}, nil
 }
 
-func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status string, reason *string) (*models.JobApplication, error) {
+func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId string, status models.ApplicantStatus, reason *string) (*models.JobApplication, error) {
 	recruiterUUID, err := uuid.Parse(recruiterId)
 	if err != nil {
 		return nil, errors.New("invalid recruiter ID")
@@ -496,16 +504,16 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 		return nil, errors.New("you can only update applications for your own jobs")
 	}
 
-	validStatuses := map[string]bool{
-		"pending":  true,
-		"reviewed": true,
-		"accepted": true,
-		"rejected": true,
-		"hired":    true,
+	validStatuses := map[models.ApplicantStatus]bool{
+		models.Pending:  true,
+		models.Reviewed: true,
+		models.Accepted: true,
+		models.Rejected: true,
+		models.Hired:    true,
 	}
 
 	if !validStatuses[status] {
-		return nil, errors.New("invalid status. must be: pending, reviewed, accepted, rejected, or hired")
+		return nil, errors.New("invalid status. must be: PENDING, REVIEWED, ACCEPTED, REJECTED, or HIRED")
 	}
 
 	application.Status = status
@@ -520,14 +528,16 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 	go func() {
 		statusMessage := "updated"
 		switch status {
-		case "accepted":
+		case models.Accepted:
 			statusMessage = "accepted"
-		case "rejected":
+		case models.Rejected:
 			statusMessage = "rejected"
-		case "hired":
+		case models.Hired:
 			statusMessage = "hired"
-		case "reviewed":
+		case models.Reviewed:
 			statusMessage = "reviewed"
+		case models.Pending:
+			statusMessage = "pending"
 		}
 
 		emailData := map[string]interface{}{
@@ -553,15 +563,15 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 
 	go func() {
 		var err error
-		switch application.Status {
-		case "accepted":
+		switch status {
+		case models.Accepted:
 			err = s.notification.NotifyApplicationAccepted(
 				application.ApplicantID.String(),
 				recruiterId,
 				application.JobID.String(),
 				application.Job.Title,
 			)
-		case "rejected":
+		case models.Rejected:
 			err = s.notification.NotifyApplicationRejected(
 				application.ApplicantID.String(),
 				recruiterId,
@@ -583,11 +593,19 @@ func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId, status 
 }
 
 func (s *JobService) AcceptApplication(recruiterId, applicationId string, reason *string) (*models.JobApplication, error) {
-	return s.UpdateApplicationStatus(recruiterId, applicationId, "accepted", reason)
+	return s.UpdateApplicationStatus(recruiterId, applicationId, models.Accepted, reason)
 }
 
 func (s *JobService) RejectApplication(recruiterId, applicationId string, reason *string) (*models.JobApplication, error) {
-	return s.UpdateApplicationStatus(recruiterId, applicationId, "rejected", reason)
+	return s.UpdateApplicationStatus(recruiterId, applicationId, models.Rejected, reason)
+}
+
+func (s *JobService) ReviewApplication(recruiterId, applicationId string, reason *string) (*models.JobApplication, error) {
+	return s.UpdateApplicationStatus(recruiterId, applicationId, models.Reviewed, reason)
+}
+
+func (s *JobService) HireApplication(recruiterId, applicationId string, reason *string) (*models.JobApplication, error) {
+	return s.UpdateApplicationStatus(recruiterId, applicationId, models.Hired, reason)
 }
 
 func (s *JobService) GetApplicationById(applicationId string) (*models.JobApplication, error) {
