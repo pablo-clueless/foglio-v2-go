@@ -123,6 +123,9 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 	if payload.Phone != nil {
 		user.Phone = payload.Phone
 	}
+	if payload.Role != nil {
+		user.Role = payload.Role
+	}
 	if payload.Summary != nil {
 		user.Summary = payload.Summary
 	}

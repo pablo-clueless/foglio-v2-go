@@ -33,6 +33,7 @@ type UpdateUserDto struct {
 	Headline       *string                `json:"headline,omitempty"`
 	Location       *string                `json:"location,omitempty"`
 	Summary        *string                `json:"summary,omitempty"`
+	Role           *string                `json:"role,omitempty"`
 	SocialMedia    *models.SocialMedia    `json:"social_media,omitempty"`
 	Skills         []string               `json:"skills,omitempty"`
 	Projects       []models.Project       `json:"projects,omitempty"`
