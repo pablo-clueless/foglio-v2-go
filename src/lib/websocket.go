@@ -14,6 +14,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ChatMessageHandler interface {
+	HandleWebSocketMessage(senderID string, payload map[string]interface{}) (interface{}, error)
+}
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -28,11 +32,12 @@ type Client struct {
 }
 
 type Hub struct {
-	clients    map[string]map[*Client]bool // userID -> clients map
-	broadcast  chan models.Notification
-	register   chan *Client
-	unregister chan *Client
-	mu         sync.RWMutex
+	clients            map[string]map[*Client]bool // userID -> clients map
+	broadcast          chan models.Notification
+	register           chan *Client
+	unregister         chan *Client
+	mu                 sync.RWMutex
+	chatMessageHandler ChatMessageHandler
 }
 
 func NewHub() *Hub {
@@ -42,6 +47,14 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
+}
+
+func (h *Hub) SetChatMessageHandler(handler ChatMessageHandler) {
+	h.chatMessageHandler = handler
+}
+
+func (h *Hub) GetChatMessageHandler() ChatMessageHandler {
+	return h.chatMessageHandler
 }
 
 func (h *Hub) Run() {
@@ -76,7 +89,6 @@ func (h *Hub) Run() {
 				for client := range userClients {
 					select {
 					case client.send <- notification:
-						// Message sent successfully
 					default:
 						close(client.send)
 						delete(userClients, client)
@@ -88,7 +100,6 @@ func (h *Hub) Run() {
 	}
 }
 
-// Send notification to specific user
 func (h *Hub) SendToUser(userID string, notification models.Notification) {
 	notification.OwnerID = uuid.Must(uuid.Parse(userID))
 	notification.CreatedAt = time.Now()
@@ -146,19 +157,52 @@ func (c *Client) readPump() {
 			break
 		}
 
-		// Handle incoming messages (e.g., mark as read)
 		var msg map[string]interface{}
 		if err := json.Unmarshal(message, &msg); err == nil {
 			if action, ok := msg["action"].(string); ok {
 				switch action {
 				case "mark_read":
 					if notificationID, ok := msg["notification_id"].(string); ok {
-						// Handle mark as read logic
 						log.Printf("Marking notification %s as read for user %s", notificationID, c.userID)
 					}
+				case "send_message", "typing", "stop_typing", "mark_messages_read":
+					if c.hub.chatMessageHandler != nil {
+						go func(payload map[string]interface{}) {
+							result, err := c.hub.chatMessageHandler.HandleWebSocketMessage(c.userID, payload)
+							if err != nil {
+								c.sendResponse(map[string]interface{}{
+									"success": false,
+									"type":    action + "_response",
+									"error":   err.Error(),
+								})
+							} else {
+								c.sendResponse(map[string]interface{}{
+									"success": true,
+									"type":    action + "_response",
+									"data":    result,
+								})
+							}
+						}(msg)
+					}
+				case "ping":
+					c.sendResponse(map[string]interface{}{
+						"type": "pong",
+						"time": time.Now().Unix(),
+					})
 				}
 			}
 		}
+	}
+}
+
+func (c *Client) sendResponse(response map[string]interface{}) {
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("Error marshaling response: %v", err)
+		return
+	}
+	if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
+		log.Printf("Error sending response: %v", err)
 	}
 }
 
@@ -193,7 +237,6 @@ func (wsh *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 		return
 	}
 
-	// Get user ID from context (set by AuthMiddleware)
 	userID, exists := c.Get(config.AppConfig.CurrentUserId)
 	if !exists {
 		userID = "anonymous"
@@ -219,7 +262,6 @@ func (wsh *WebSocketHandler) GetStats(c *gin.Context) {
 	})
 }
 
-// Send notification to specific user
 func (wsh *WebSocketHandler) SendNotification(c *gin.Context) {
 	var req struct {
 		UserID  string                 `json:"user_id" binding:"required"`
