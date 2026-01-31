@@ -105,6 +105,7 @@ func InitializeConfig() {
 			{Endpoint: "/api/v2/auth/verification", Method: http.MethodPost},
 			{Endpoint: "/api/v2/auth/forgot-password", Method: http.MethodPost},
 			{Endpoint: "/api/v2/auth/reset-password", Method: http.MethodPost},
+			{Endpoint: "/api/v2/auth/2fa/verify", Method: http.MethodPost},
 			{Endpoint: "/api/v2/auth/github", Method: http.MethodGet},
 			{Endpoint: "/api/v2/auth/github/callback", Method: http.MethodGet},
 			{Endpoint: "/api/v2/auth/google", Method: http.MethodGet},

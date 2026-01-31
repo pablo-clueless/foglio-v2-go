@@ -11,40 +11,43 @@ import (
 )
 
 type User struct {
-	ID                  uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name                string             `gorm:"not null" json:"name"`
-	Username            string             `gorm:"uniqueIndex;not null" json:"username"`
-	Email               string             `gorm:"uniqueIndex;not null" json:"email"`
-	Password            string             `gorm:"null" json:"-"`                   // Nullable for OAuth users
-	Provider            string             `gorm:"default:'local'" json:"provider"` // local, google, github
-	ProviderID          string             `gorm:"null" json:"-"`                   // Provider's user ID
-	Role                *string            `json:"role"`
-	Headline            *string            `json:"headline"`
-	Phone               *string            `gorm:"index" json:"phone"`
-	Location            *string            `gorm:"index" json:"location"`
-	Image               *string            `json:"image"`
-	Domain              *Domain            `gorm:"type:jsonb;serializer:json" json:"domain,omitempty"`
-	Portfolio           *Portfolio         `gorm:"foreignKey:UserID" json:"portfolio,omitempty"`
-	Summary             *string            `gorm:"null" json:"summary"`
-	SocialMedia         *SocialMedia       `gorm:"type:jsonb;serializer:json" json:"social_media,omitempty"`
-	CompanyID           *uuid.UUID         `gorm:"type:uuid;index" json:"company_id,omitempty"`
-	Company             *Company           `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
-	CurrentSubscription *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
-	SubscriptionHistory []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
-	Skills              pq.StringArray     `gorm:"type:text[]" json:"skills"`
-	Projects            []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
-	Experiences         []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
-	Education           []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
-	Certifications      []Certification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
-	Languages           []Language         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
-	IsAdmin             bool               `json:"is_admin"`
-	IsRecruiter         bool               `json:"is_recruiter"`
-	IsPremium           bool               `json:"is_premium"`
-	CreatedAt           time.Time          `json:"created_at"`
-	UpdatedAt           time.Time          `json:"updated_at"`
-	DeletedAt           gorm.DeletedAt     `gorm:"index" json:"-"`
-	Verified            bool               `json:"verified"`
-	Otp                 string             `json:"otp"`
+	ID                   uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name                 string             `gorm:"not null" json:"name"`
+	Username             string             `gorm:"uniqueIndex;not null" json:"username"`
+	Email                string             `gorm:"uniqueIndex;not null" json:"email"`
+	Password             string             `gorm:"null" json:"-"`                   // Nullable for OAuth users
+	Provider             string             `gorm:"default:'local'" json:"provider"` // local, google, github
+	ProviderID           string             `gorm:"null" json:"-"`                   // Provider's user ID
+	Role                 *string            `json:"role"`
+	Headline             *string            `json:"headline"`
+	Phone                *string            `gorm:"index" json:"phone"`
+	Location             *string            `gorm:"index" json:"location"`
+	Image                *string            `json:"image"`
+	Domain               *Domain            `gorm:"type:jsonb;serializer:json" json:"domain,omitempty"`
+	Portfolio            *Portfolio         `gorm:"foreignKey:UserID" json:"portfolio,omitempty"`
+	Summary              *string            `gorm:"null" json:"summary"`
+	SocialMedia          *SocialMedia       `gorm:"type:jsonb;serializer:json" json:"social_media,omitempty"`
+	CompanyID            *uuid.UUID         `gorm:"type:uuid;index" json:"company_id,omitempty"`
+	Company              *Company           `gorm:"foreignKey:CompanyID;references:ID" json:"company,omitempty"`
+	CurrentSubscription  *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
+	SubscriptionHistory  []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
+	Skills               pq.StringArray     `gorm:"type:text[]" json:"skills"`
+	Projects             []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
+	Experiences          []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
+	Education            []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
+	Certifications       []Certification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
+	Languages            []Language         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
+	IsTwoFactorEnabled   bool               `json:"is_two_factor_enabled"`
+	TwoFactorSecret      *string            `gorm:"column:two_factor_secret" json:"-"`
+	TwoFactorBackupCodes pq.StringArray     `gorm:"type:text[];column:two_factor_backup_codes" json:"-"`
+	IsAdmin              bool               `json:"is_admin"`
+	IsRecruiter          bool               `json:"is_recruiter"`
+	IsPremium            bool               `json:"is_premium"`
+	CreatedAt            time.Time          `json:"created_at"`
+	UpdatedAt            time.Time          `json:"updated_at"`
+	DeletedAt            gorm.DeletedAt     `gorm:"index" json:"-"`
+	Verified             bool               `json:"verified"`
+	Otp                  string             `json:"otp"`
 }
 
 type Company struct {
