@@ -336,6 +336,12 @@ func (s *PaystackService) ProcessSuccessfulPayment(data *dto.VerifyTransactionDa
 		return err
 	}
 
+	// Get the user for subdomain assignment
+	var user models.User
+	if err := s.database.First(&user, "id = ?", userID).Error; err != nil {
+		return err
+	}
+
 	tx := s.database.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -408,7 +414,42 @@ func (s *PaystackService) ProcessSuccessfulPayment(data *dto.VerifyTransactionDa
 		return err
 	}
 
+	// Auto-assign subdomain based on username if user doesn't have one
+	if user.Domain == nil || user.Domain.Subdomain == "" {
+		subdomain := generateUniqueSubdomain(tx, user.Username)
+		if user.Domain == nil {
+			user.Domain = &models.Domain{}
+		}
+		user.Domain.Subdomain = subdomain
+		if err := tx.Save(&user).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
 	return tx.Commit().Error
+}
+
+// generateUniqueSubdomain creates a unique subdomain based on username
+func generateUniqueSubdomain(tx *gorm.DB, username string) string {
+	baseSubdomain := strings.ToLower(username)
+	subdomain := baseSubdomain
+
+	// Check if subdomain is taken, append number if needed
+	counter := 1
+	for {
+		var count int64
+		tx.Model(&models.User{}).
+			Where("domain->>'subdomain' = ?", subdomain).
+			Count(&count)
+		if count == 0 {
+			break
+		}
+		subdomain = fmt.Sprintf("%s%d", baseSubdomain, counter)
+		counter++
+	}
+
+	return subdomain
 }
 
 func isDuplicateKeyError(err error) bool {

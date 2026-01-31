@@ -108,6 +108,9 @@ func main() {
 	routes.NotificationRoutes(router)
 	routes.SubscriptionRoutes(router)
 	routes.PaystackRoutes(router)
+	routes.DomainRoutes(router)
+	routes.PortfolioRoutes(router)
+	routes.AnalyticsRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 
 	server := &http.Server{
