@@ -113,6 +113,13 @@ func main() {
 	routes.AnalyticsRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 
+	if config.AppConfig.RunSeeds {
+		err = database.RunSeeds()
+		if err != nil {
+			log.Println("an error occurred while seeding", err)
+		}
+	}
+
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%s", config.AppConfig.Port),
 		Handler:        app,
