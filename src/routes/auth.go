@@ -21,10 +21,7 @@ func AuthRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	auth.GET("/:provider", handler.GetOAuthURL())
 	auth.GET("/:provider/callback", handler.HandleOAuthCallback())
 
-	// 2FA verification during login (public - no auth required)
 	auth.POST("/2fa/verify", twoFactorHandler.Verify2FALogin())
-
-	// 2FA management routes (require authentication)
 	twoFactor := auth.Group("/2fa")
 	{
 		twoFactor.GET("/status", twoFactorHandler.GetStatus())
