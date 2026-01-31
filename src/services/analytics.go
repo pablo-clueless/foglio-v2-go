@@ -630,9 +630,10 @@ func (s *AnalyticsService) getRecruiterTrendData(userID uuid.UUID, startDate, en
 	var trendData []dto.TrendDataPoint
 
 	dateFormat := "YYYY-MM-DD"
-	if groupBy == "week" {
+	switch groupBy {
+	case "week":
 		dateFormat = "IYYY-IW"
-	} else if groupBy == "month" {
+	case "month":
 		dateFormat = "YYYY-MM"
 	}
 
@@ -832,9 +833,10 @@ func (s *AnalyticsService) getTalentTrendData(userID uuid.UUID, startDate, endDa
 	var trendData []dto.TrendDataPoint
 
 	dateFormat := "YYYY-MM-DD"
-	if groupBy == "week" {
+	switch groupBy {
+	case "week":
 		dateFormat = "IYYY-IW"
-	} else if groupBy == "month" {
+	case "month":
 		dateFormat = "YYYY-MM"
 	}
 
@@ -877,9 +879,10 @@ func (s *AnalyticsService) getTrendData(startDate, endDate time.Time, groupBy, s
 	var trendData []dto.TrendDataPoint
 
 	dateFormat := "YYYY-MM-DD"
-	if groupBy == "week" {
+	switch groupBy {
+	case "week":
 		dateFormat = "IYYY-IW"
-	} else if groupBy == "month" {
+	case "month":
 		dateFormat = "YYYY-MM"
 	}
 

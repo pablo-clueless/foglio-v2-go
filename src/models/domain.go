@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"time"
 )
 
@@ -43,7 +44,10 @@ func (d Domain) Value() (driver.Value, error) {
 }
 func GenerateVerificationToken() string {
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		log.Println("error generating token", err)
+	}
 	return hex.EncodeToString(bytes)
 }
 func GenerateDnsRecords(customDomain, verificationToken string) []DnsRecord {
