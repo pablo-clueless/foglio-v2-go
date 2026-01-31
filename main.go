@@ -42,7 +42,9 @@ func main() {
 	app.Use(gin.Logger())
 
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Content-Length", "Accept-Encoding", "X-CSRF-Token"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"},
@@ -50,16 +52,6 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}
 	app.Use(cors.New(corsConfig))
-
-	app.OPTIONS("/*path", func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", c.Request.Header.Get("Origin"))
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept, X-Requested-With, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Content-Length, Accept-Encoding, X-CSRF-Token")
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("Access-Control-Max-Age", "43200") // 12 hours
-		c.Status(http.StatusNoContent)
-	})
-
 	app.Use(middlewares.ErrorHandlerMiddleware())
 	app.Use(middlewares.AuthMiddleware())
 	app.Use(middlewares.RateLimiterMiddleware())
