@@ -136,7 +136,144 @@ const template = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Authentication successful",
+                        "description": "Authentication successful (or 2FA required)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string",
+                                    "description": "JWT token (empty if 2FA required)"
+                                },
+                                "user": {
+                                    "type": "object",
+                                    "description": "User object (empty if 2FA required)"
+                                },
+                                "requires_two_factor": {
+                                    "type": "boolean",
+                                    "description": "True if 2FA verification is needed"
+                                },
+                                "user_id": {
+                                    "type": "string",
+                                    "description": "User ID for 2FA verification (only if 2FA required)"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/setup": {
+            "post": {
+                "summary": "Start 2FA setup",
+                "description": "Generate a TOTP secret and QR code URL for setting up 2FA",
+                "tags": ["Two-Factor Authentication"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "2FA setup initiated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "secret": {
+                                    "type": "string",
+                                    "description": "TOTP secret key"
+                                },
+                                "qr_code_url": {
+                                    "type": "string",
+                                    "description": "URL for QR code (otpauth://)"
+                                },
+                                "backup_codes": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "One-time backup codes"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "2FA already enabled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/verify-setup": {
+            "post": {
+                "summary": "Verify and enable 2FA",
+                "description": "Verify the TOTP code from the authenticator app and enable 2FA",
+                "tags": ["Two-Factor Authentication"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["code"],
+                            "properties": {
+                                "code": {
+                                    "type": "string",
+                                    "example": "123456",
+                                    "description": "6-digit TOTP code from authenticator app"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "2FA enabled successfully"
+                    },
+                    "400": {
+                        "description": "Invalid verification code"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/verify": {
+            "post": {
+                "summary": "Verify 2FA during login",
+                "description": "Verify the TOTP code or backup code during login to get the auth token",
+                "tags": ["Two-Factor Authentication"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["user_id", "code"],
+                            "properties": {
+                                "user_id": {
+                                    "type": "string",
+                                    "description": "User ID returned from signin"
+                                },
+                                "code": {
+                                    "type": "string",
+                                    "example": "123456",
+                                    "description": "6-digit TOTP code or backup code"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "2FA verification successful",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -145,6 +282,122 @@ const template = `{
                                 },
                                 "user": {
                                     "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid verification code"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/disable": {
+            "post": {
+                "summary": "Disable 2FA",
+                "description": "Disable two-factor authentication (requires password confirmation)",
+                "tags": ["Two-Factor Authentication"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["password"],
+                            "properties": {
+                                "password": {
+                                    "type": "string",
+                                    "description": "Current password for confirmation"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "2FA disabled successfully"
+                    },
+                    "400": {
+                        "description": "Invalid password or 2FA not enabled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/backup-codes": {
+            "post": {
+                "summary": "Regenerate backup codes",
+                "description": "Generate new backup codes (invalidates old ones, requires password)",
+                "tags": ["Two-Factor Authentication"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["password"],
+                            "properties": {
+                                "password": {
+                                    "type": "string",
+                                    "description": "Current password for confirmation"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New backup codes generated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "backup_codes": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid password or 2FA not enabled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/auth/2fa/status": {
+            "get": {
+                "summary": "Get 2FA status",
+                "description": "Get the current 2FA status for the authenticated user",
+                "tags": ["Two-Factor Authentication"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "2FA status retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "backup_codes_left": {
+                                    "type": "integer"
                                 }
                             }
                         }

@@ -199,6 +199,7 @@ func runMigrations(db *gorm.DB) error {
 		{"028_create_portfolio_views", &models.PortfolioView{}},
 		{"029_create_analytics_events", &models.AnalyticsEvent{}},
 		{"030_create_daily_stats", &models.DailyStats{}},
+		{"031_add_two_factor_fields", &models.User{}},
 	}
 
 	pendingCount := 0
