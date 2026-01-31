@@ -9,7 +9,6 @@ import (
 func SubscriptionRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	handler := handlers.NewSubscriptionHandler()
 
-	// Subscription tiers (admin routes)
 	subscriptions := router.Group("/subscriptions")
 	subscriptions.POST("", handler.CreateSubscription())
 	subscriptions.GET("", handler.GetSubscriptions())
@@ -17,7 +16,6 @@ func SubscriptionRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	subscriptions.PUT("/:id", handler.UpdateSubscription())
 	subscriptions.DELETE("/:id", handler.DeleteSubscription())
 
-	// User subscription actions
 	userSubs := router.Group("/user/subscriptions")
 	userSubs.GET("", handler.GetUserSubscriptions())
 	userSubs.GET("/:id", handler.GetUserSubscription())
