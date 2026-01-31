@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	ErrConversationNotFound  = errors.New("conversation not found")
-	ErrMessageNotFound       = errors.New("message not found")
-	ErrNotParticipant        = errors.New("you are not a participant in this conversation")
-	ErrCannotMessageSelf     = errors.New("you cannot send a message to yourself")
-	ErrRecipientNotFound     = errors.New("recipient not found")
-	ErrEmptyMessage          = errors.New("message must have content or media")
+	ErrConversationNotFound = errors.New("conversation not found")
+	ErrMessageNotFound      = errors.New("message not found")
+	ErrNotParticipant       = errors.New("you are not a participant in this conversation")
+	ErrCannotMessageSelf    = errors.New("you cannot send a message to yourself")
+	ErrRecipientNotFound    = errors.New("recipient not found")
+	ErrEmptyMessage         = errors.New("message must have content or media")
 )
 
 type ChatService struct {
@@ -35,7 +35,6 @@ func NewChatService(database *gorm.DB, hub *lib.Hub, notificationService *Notifi
 	}
 }
 
-// SendMessage sends a message to a user, creating a conversation if needed
 func (s *ChatService) SendMessage(senderID string, payload dto.SendMessageDto) (*models.Message, error) {
 	senderUUID := uuid.Must(uuid.Parse(senderID))
 	recipientUUID, err := uuid.Parse(payload.RecipientID)
@@ -43,17 +42,14 @@ func (s *ChatService) SendMessage(senderID string, payload dto.SendMessageDto) (
 		return nil, errors.New("invalid recipient ID")
 	}
 
-	// Cannot message self
 	if senderUUID == recipientUUID {
 		return nil, ErrCannotMessageSelf
 	}
 
-	// Validate message has content or media
 	if payload.Content == "" && len(payload.Media) == 0 {
 		return nil, ErrEmptyMessage
 	}
 
-	// Check recipient exists
 	var recipient models.User
 	if err := s.database.Where("id = ?", recipientUUID).First(&recipient).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -62,13 +58,11 @@ func (s *ChatService) SendMessage(senderID string, payload dto.SendMessageDto) (
 		return nil, err
 	}
 
-	// Find or create conversation
 	conversation, err := s.findOrCreateConversation(senderUUID, recipientUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert media DTOs to model
 	var media models.MessageMediaList
 	for _, m := range payload.Media {
 		media = append(media, models.MessageMedia{
@@ -85,7 +79,6 @@ func (s *ChatService) SendMessage(senderID string, payload dto.SendMessageDto) (
 		})
 	}
 
-	// Create message
 	message := &models.Message{
 		ConversationID: conversation.ID,
 		SenderID:       senderUUID,
@@ -99,19 +92,15 @@ func (s *ChatService) SendMessage(senderID string, payload dto.SendMessageDto) (
 		return nil, err
 	}
 
-	// Update conversation timestamp
 	s.database.Model(conversation).Update("updated_at", time.Now())
 
-	// Load sender for response
 	s.database.Preload("Sender").First(message, "id = ?", message.ID)
 
-	// Send real-time notification via WebSocket
 	go s.sendMessageNotification(message, &recipient)
 
 	return message, nil
 }
 
-// GetConversations returns all conversations for a user
 func (s *ChatService) GetConversations(userID string, page, limit int) (*dto.ConversationListResponse, error) {
 	if limit <= 0 {
 		limit = 20
@@ -125,7 +114,7 @@ func (s *ChatService) GetConversations(userID string, page, limit int) (*dto.Con
 	var totalItems int64
 
 	query := s.database.Model(&models.Conversation{}).
-		Where("participant_1 = ? OR participant_2 = ?", userUUID, userUUID)
+		Where("participant1 = ? OR participant2 = ?", userUUID, userUUID)
 
 	if err := query.Count(&totalItems).Error; err != nil {
 		return nil, err
@@ -142,7 +131,6 @@ func (s *ChatService) GetConversations(userID string, page, limit int) (*dto.Con
 		return nil, err
 	}
 
-	// Build response with last message and unread count
 	responses := make([]dto.ConversationResponse, len(conversations))
 	for i, conv := range conversations {
 		responses[i] = s.toConversationResponse(&conv, userUUID)
@@ -162,7 +150,6 @@ func (s *ChatService) GetConversations(userID string, page, limit int) (*dto.Con
 	}, nil
 }
 
-// GetConversation returns a single conversation
 func (s *ChatService) GetConversation(userID, conversationID string) (*dto.ConversationResponse, error) {
 	userUUID := uuid.Must(uuid.Parse(userID))
 
@@ -186,7 +173,6 @@ func (s *ChatService) GetConversation(userID, conversationID string) (*dto.Conve
 	return &response, nil
 }
 
-// GetOrCreateConversation gets or creates a conversation with another user
 func (s *ChatService) GetOrCreateConversation(userID, otherUserID string) (*dto.ConversationResponse, error) {
 	userUUID := uuid.Must(uuid.Parse(userID))
 	otherUUID, err := uuid.Parse(otherUserID)
@@ -198,7 +184,6 @@ func (s *ChatService) GetOrCreateConversation(userID, otherUserID string) (*dto.
 		return nil, ErrCannotMessageSelf
 	}
 
-	// Check other user exists
 	var otherUser models.User
 	if err := s.database.Where("id = ?", otherUUID).First(&otherUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -212,14 +197,12 @@ func (s *ChatService) GetOrCreateConversation(userID, otherUserID string) (*dto.
 		return nil, err
 	}
 
-	// Reload with users
 	s.database.Preload("User1").Preload("User2").First(conversation, "id = ?", conversation.ID)
 
 	response := s.toConversationResponse(conversation, userUUID)
 	return &response, nil
 }
 
-// GetMessages returns messages in a conversation
 func (s *ChatService) GetMessages(userID, conversationID string, page, limit int) (*dto.MessageListResponse, error) {
 	if limit <= 0 {
 		limit = 50
@@ -230,7 +213,6 @@ func (s *ChatService) GetMessages(userID, conversationID string, page, limit int
 
 	userUUID := uuid.Must(uuid.Parse(userID))
 
-	// Verify user is participant
 	var conversation models.Conversation
 	if err := s.database.Where("id = ?", conversationID).First(&conversation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -262,7 +244,6 @@ func (s *ChatService) GetMessages(userID, conversationID string, page, limit int
 		return nil, err
 	}
 
-	// Build response
 	responses := make([]dto.MessageResponse, len(messages))
 	for i, msg := range messages {
 		responses[i] = s.toMessageResponse(&msg)
@@ -282,11 +263,9 @@ func (s *ChatService) GetMessages(userID, conversationID string, page, limit int
 	}, nil
 }
 
-// MarkMessagesAsRead marks all messages in a conversation as read
 func (s *ChatService) MarkMessagesAsRead(userID, conversationID string) error {
 	userUUID := uuid.Must(uuid.Parse(userID))
 
-	// Verify user is participant
 	var conversation models.Conversation
 	if err := s.database.Where("id = ?", conversationID).First(&conversation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -300,7 +279,7 @@ func (s *ChatService) MarkMessagesAsRead(userID, conversationID string) error {
 	}
 
 	now := time.Now()
-	// Mark all unread messages where user is recipient
+
 	result := s.database.Model(&models.Message{}).
 		Where("conversation_id = ? AND recipient_id = ? AND status != ?", conversationID, userUUID, models.MessageStatusRead).
 		Updates(map[string]interface{}{
@@ -312,7 +291,6 @@ func (s *ChatService) MarkMessagesAsRead(userID, conversationID string) error {
 		return result.Error
 	}
 
-	// Send read receipts via WebSocket if messages were updated
 	if result.RowsAffected > 0 {
 		otherUserID := conversation.GetOtherParticipant(userUUID)
 		go s.sendReadReceipt(conversationID, userID, otherUserID.String())
@@ -321,7 +299,6 @@ func (s *ChatService) MarkMessagesAsRead(userID, conversationID string) error {
 	return nil
 }
 
-// DeleteConversation deletes a conversation (soft delete)
 func (s *ChatService) DeleteConversation(userID, conversationID string) error {
 	userUUID := uuid.Must(uuid.Parse(userID))
 
@@ -340,7 +317,6 @@ func (s *ChatService) DeleteConversation(userID, conversationID string) error {
 	return s.database.Delete(&conversation).Error
 }
 
-// GetUnreadCount returns the total unread message count for a user
 func (s *ChatService) GetUnreadCount(userID string) (int64, error) {
 	userUUID := uuid.Must(uuid.Parse(userID))
 	var count int64
@@ -352,25 +328,22 @@ func (s *ChatService) GetUnreadCount(userID string) (int64, error) {
 	return count, err
 }
 
-// Helper functions
-
 func (s *ChatService) findOrCreateConversation(user1, user2 uuid.UUID) (*models.Conversation, error) {
 	var conversation models.Conversation
 
-	// Ensure consistent ordering for lookup
 	p1, p2 := user1, user2
 	if p1.String() > p2.String() {
 		p1, p2 = p2, p1
 	}
 
 	err := s.database.Where(
-		"(participant_1 = ? AND participant_2 = ?) OR (participant_1 = ? AND participant_2 = ?)",
+		"(participant1 = ? AND participant2 = ?) OR (participant1 = ? AND participant2 = ?)",
 		p1, p2, p2, p1,
 	).First(&conversation).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Create new conversation
+
 			conversation = models.Conversation{
 				Participant1: p1,
 				Participant2: p2,
