@@ -10,14 +10,14 @@ import (
 func AnnouncementRoutes(router *gin.RouterGroup, hub *lib.Hub) *gin.RouterGroup {
 	handler := handlers.NewAnnouncementHandler(hub)
 
-	// User-facing routes
+	// Users
 	announcements := router.Group("/announcements")
 	announcements.GET("", handler.GetAnnouncements())
 	announcements.GET("/banners", handler.GetActiveBanners())
 	announcements.PUT("/:id/read", handler.MarkAsRead())
 	announcements.PUT("/:id/dismiss", handler.DismissAnnouncement())
 
-	// Admin routes
+	// Admins
 	admin := router.Group("/admin/announcements")
 	admin.GET("", handler.GetAnnouncementsAdmin())
 	admin.GET("/:id", handler.GetAnnouncementAdmin())
