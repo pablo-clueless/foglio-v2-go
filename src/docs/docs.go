@@ -1938,6 +1938,997 @@ const template = `{
                     }
                 }
             }
+        },
+        "/api/v2/domain": {
+            "get": {
+                "summary": "Get domain configuration",
+                "description": "Get the authenticated user's domain configuration including subdomain and custom domain",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Domain configuration retrieved"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/domain/check/{subdomain}": {
+            "get": {
+                "summary": "Check subdomain availability",
+                "description": "Check if a subdomain is available for use",
+                "tags": ["Domain"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Subdomain to check"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Availability status"
+                    }
+                }
+            }
+        },
+        "/api/v2/domain/subdomain": {
+            "post": {
+                "summary": "Claim subdomain",
+                "description": "Claim a subdomain for your profile (e.g., username.foglio.app)",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["subdomain"],
+                            "properties": {
+                                "subdomain": {
+                                    "type": "string",
+                                    "example": "johndoe",
+                                    "description": "Subdomain (3-32 characters, alphanumeric)"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Subdomain claimed successfully"
+                    },
+                    "400": {
+                        "description": "Subdomain taken, invalid, or reserved"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update subdomain",
+                "description": "Update your subdomain",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["subdomain"],
+                            "properties": {
+                                "subdomain": {
+                                    "type": "string",
+                                    "example": "newsubdomain"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subdomain updated successfully"
+                    },
+                    "400": {
+                        "description": "Subdomain taken or invalid"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/domain/custom": {
+            "post": {
+                "summary": "Set custom domain",
+                "description": "Set a custom domain for your profile (paid users only)",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["custom_domain"],
+                            "properties": {
+                                "custom_domain": {
+                                    "type": "string",
+                                    "example": "portfolio.example.com",
+                                    "description": "Your custom domain"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Custom domain configured, DNS records provided for verification"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Custom domains require a paid subscription"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Remove custom domain",
+                "description": "Remove your custom domain",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Custom domain removed"
+                    },
+                    "400": {
+                        "description": "No custom domain configured"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/domain/custom/verify": {
+            "post": {
+                "summary": "Verify custom domain",
+                "description": "Verify DNS records for custom domain",
+                "tags": ["Domain"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Verification status returned"
+                    },
+                    "400": {
+                        "description": "No custom domain configured"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio": {
+            "get": {
+                "summary": "Get my portfolio",
+                "description": "Get the authenticated user's portfolio",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create portfolio",
+                "description": "Create a new portfolio for the authenticated user",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["title", "slug"],
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "example": "John Doe's Portfolio"
+                                },
+                                "slug": {
+                                    "type": "string",
+                                    "example": "john-doe",
+                                    "description": "URL-friendly identifier (3-50 chars, lowercase, alphanumeric with hyphens)"
+                                },
+                                "tagline": {
+                                    "type": "string",
+                                    "example": "Full-stack Developer"
+                                },
+                                "bio": {
+                                    "type": "string",
+                                    "example": "Passionate developer with 5 years of experience..."
+                                },
+                                "template": {
+                                    "type": "string",
+                                    "example": "default",
+                                    "description": "Portfolio template"
+                                },
+                                "theme": {
+                                    "type": "object",
+                                    "properties": {
+                                        "primary_color": {"type": "string", "example": "#3B82F6"},
+                                        "secondary_color": {"type": "string", "example": "#1E40AF"},
+                                        "accent_color": {"type": "string", "example": "#F59E0B"},
+                                        "text_color": {"type": "string", "example": "#1F2937"},
+                                        "background_color": {"type": "string", "example": "#FFFFFF"},
+                                        "font_family": {"type": "string", "example": "Inter"},
+                                        "font_size": {"type": "string", "example": "16px"}
+                                    }
+                                },
+                                "seo": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta_title": {"type": "string"},
+                                        "meta_description": {"type": "string"},
+                                        "meta_keywords": {"type": "string"},
+                                        "og_image": {"type": "string"}
+                                    }
+                                },
+                                "settings": {
+                                    "type": "object",
+                                    "properties": {
+                                        "show_projects": {"type": "boolean", "default": true},
+                                        "show_experiences": {"type": "boolean", "default": true},
+                                        "show_education": {"type": "boolean", "default": true},
+                                        "show_skills": {"type": "boolean", "default": true},
+                                        "show_certifications": {"type": "boolean", "default": true},
+                                        "show_contact": {"type": "boolean", "default": true},
+                                        "show_social_links": {"type": "boolean", "default": true},
+                                        "enable_analytics": {"type": "boolean", "default": false},
+                                        "enable_comments": {"type": "boolean", "default": false}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Portfolio created successfully"
+                    },
+                    "400": {
+                        "description": "Portfolio already exists or invalid data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update portfolio",
+                "description": "Update the authenticated user's portfolio",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string"},
+                                "slug": {"type": "string"},
+                                "tagline": {"type": "string"},
+                                "bio": {"type": "string"},
+                                "cover_image": {"type": "string"},
+                                "logo": {"type": "string"},
+                                "template": {"type": "string"},
+                                "theme": {"type": "object"},
+                                "custom_css": {"type": "string"},
+                                "status": {"type": "string", "enum": ["draft", "published", "archived"]},
+                                "is_public": {"type": "boolean"},
+                                "seo": {"type": "object"},
+                                "settings": {"type": "object"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete portfolio",
+                "description": "Delete the authenticated user's portfolio",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio/publish": {
+            "post": {
+                "summary": "Publish portfolio",
+                "description": "Publish the portfolio to make it publicly accessible",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio published successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio/unpublish": {
+            "post": {
+                "summary": "Unpublish portfolio",
+                "description": "Unpublish the portfolio (set to draft)",
+                "tags": ["Portfolio"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio unpublished successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio/sections": {
+            "post": {
+                "summary": "Create portfolio section",
+                "description": "Create a new section in the portfolio",
+                "tags": ["Portfolio Sections"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["title", "type"],
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "example": "About Me"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["hero", "about", "projects", "experience", "skills", "contact", "custom"],
+                                    "example": "about"
+                                },
+                                "content": {
+                                    "type": "string",
+                                    "description": "Section content (HTML or markdown)"
+                                },
+                                "settings": {
+                                    "type": "string",
+                                    "description": "JSON string for section-specific settings"
+                                },
+                                "sort_order": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "is_visible": {
+                                    "type": "boolean",
+                                    "default": true
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Section created successfully"
+                    },
+                    "400": {
+                        "description": "Invalid data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio/sections/{sectionId}": {
+            "put": {
+                "summary": "Update portfolio section",
+                "description": "Update a section in the portfolio",
+                "tags": ["Portfolio Sections"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "sectionId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Section UUID"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string"},
+                                "type": {"type": "string"},
+                                "content": {"type": "string"},
+                                "settings": {"type": "string"},
+                                "sort_order": {"type": "integer"},
+                                "is_visible": {"type": "boolean"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Section updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Section not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete portfolio section",
+                "description": "Delete a section from the portfolio",
+                "tags": ["Portfolio Sections"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {
+                        "name": "sectionId",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Section UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Section deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Section not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolio/sections/reorder": {
+            "post": {
+                "summary": "Reorder portfolio sections",
+                "description": "Reorder sections by providing an array of section IDs in desired order",
+                "tags": ["Portfolio Sections"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["section_ids"],
+                            "properties": {
+                                "section_ids": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "Array of section UUIDs in desired order"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sections reordered successfully"
+                    },
+                    "400": {
+                        "description": "Invalid data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Portfolio not found"
+                    }
+                }
+            }
+        },
+        "/api/v2/portfolios/{slug}": {
+            "get": {
+                "summary": "Get public portfolio",
+                "description": "Get a published portfolio by its slug (public access)",
+                "tags": ["Portfolio"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Portfolio slug"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Portfolio retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Portfolio not found or not published"
+                    }
+                }
+            }
+        },
+        "/api/v2/analytics/track/page-view": {
+            "post": {
+                "summary": "Track page view",
+                "description": "Track a page view event",
+                "tags": ["Analytics - Tracking"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["path", "session_id"],
+                            "properties": {
+                                "path": {"type": "string", "example": "/jobs"},
+                                "session_id": {"type": "string", "example": "sess_abc123"},
+                                "referrer": {"type": "string"},
+                                "duration": {"type": "integer", "description": "Time spent in seconds"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Page view tracked"}
+                }
+            }
+        },
+        "/api/v2/analytics/track/job-view": {
+            "post": {
+                "summary": "Track job view",
+                "description": "Track when a job listing is viewed",
+                "tags": ["Analytics - Tracking"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["job_id", "session_id"],
+                            "properties": {
+                                "job_id": {"type": "string", "format": "uuid"},
+                                "session_id": {"type": "string"},
+                                "referrer": {"type": "string"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Job view tracked"}
+                }
+            }
+        },
+        "/api/v2/analytics/track/profile-view": {
+            "post": {
+                "summary": "Track profile view",
+                "description": "Track when a user profile is viewed",
+                "tags": ["Analytics - Tracking"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["profile_user_id", "session_id"],
+                            "properties": {
+                                "profile_user_id": {"type": "string", "format": "uuid"},
+                                "session_id": {"type": "string"},
+                                "referrer": {"type": "string"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Profile view tracked"}
+                }
+            }
+        },
+        "/api/v2/analytics/track/portfolio-view": {
+            "post": {
+                "summary": "Track portfolio view",
+                "description": "Track when a portfolio is viewed",
+                "tags": ["Analytics - Tracking"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["portfolio_id", "session_id"],
+                            "properties": {
+                                "portfolio_id": {"type": "string", "format": "uuid"},
+                                "session_id": {"type": "string"},
+                                "referrer": {"type": "string"},
+                                "duration": {"type": "integer"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Portfolio view tracked"}
+                }
+            }
+        },
+        "/api/v2/analytics/track/event": {
+            "post": {
+                "summary": "Track custom event",
+                "description": "Track a custom analytics event",
+                "tags": ["Analytics - Tracking"],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["event_type", "session_id"],
+                            "properties": {
+                                "event_type": {"type": "string", "example": "button_click"},
+                                "entity_id": {"type": "string", "format": "uuid"},
+                                "entity_type": {"type": "string", "example": "job"},
+                                "session_id": {"type": "string"},
+                                "properties": {"type": "object"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Event tracked"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/dashboard": {
+            "get": {
+                "summary": "Admin analytics dashboard",
+                "description": "Get comprehensive platform analytics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date", "description": "Start date (YYYY-MM-DD)"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date", "description": "End date (YYYY-MM-DD)"},
+                    {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"], "description": "Group trend data by"}
+                ],
+                "responses": {
+                    "200": {"description": "Admin dashboard analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/overview": {
+            "get": {
+                "summary": "Platform overview",
+                "description": "Get platform overview statistics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {"description": "Platform overview stats"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/users": {
+            "get": {
+                "summary": "User analytics",
+                "description": "Get user statistics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "User analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/jobs": {
+            "get": {
+                "summary": "Job analytics",
+                "description": "Get job statistics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Job analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/applications": {
+            "get": {
+                "summary": "Application analytics",
+                "description": "Get application statistics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Application analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/admin/revenue": {
+            "get": {
+                "summary": "Revenue analytics",
+                "description": "Get revenue statistics (admin only)",
+                "tags": ["Analytics - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Revenue analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/recruiter/dashboard": {
+            "get": {
+                "summary": "Recruiter analytics dashboard",
+                "description": "Get analytics for recruiter's jobs and applications (recruiter only)",
+                "tags": ["Analytics - Recruiter"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"]}
+                ],
+                "responses": {
+                    "200": {"description": "Recruiter dashboard analytics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Recruiter access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/recruiter/jobs": {
+            "get": {
+                "summary": "Recruiter job performance",
+                "description": "Get performance metrics for recruiter's jobs",
+                "tags": ["Analytics - Recruiter"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Job performance metrics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Recruiter access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/recruiter/applications": {
+            "get": {
+                "summary": "Recruiter application stats",
+                "description": "Get application statistics for recruiter's jobs",
+                "tags": ["Analytics - Recruiter"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {"description": "Application statistics"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Recruiter access required"}
+                }
+            }
+        },
+        "/api/v2/analytics/talent/dashboard": {
+            "get": {
+                "summary": "Talent analytics dashboard",
+                "description": "Get analytics for talent's profile, portfolio, and applications",
+                "tags": ["Analytics - Talent"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"]}
+                ],
+                "responses": {
+                    "200": {"description": "Talent dashboard analytics"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/analytics/talent/profile-views": {
+            "get": {
+                "summary": "Profile views analytics",
+                "description": "Get profile views statistics for the authenticated user",
+                "tags": ["Analytics - Talent"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Profile views analytics"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/analytics/talent/portfolio": {
+            "get": {
+                "summary": "Portfolio analytics",
+                "description": "Get portfolio views and engagement statistics",
+                "tags": ["Analytics - Talent"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Portfolio analytics"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/analytics/talent/applications": {
+            "get": {
+                "summary": "Talent application stats",
+                "description": "Get statistics for user's job applications",
+                "tags": ["Analytics - Talent"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {"description": "Application statistics"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/analytics/talent/viewer-insights": {
+            "get": {
+                "summary": "Viewer insights",
+                "description": "Get insights about who viewed your profile (recruiters vs talents)",
+                "tags": ["Analytics - Talent"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+                    {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+                ],
+                "responses": {
+                    "200": {"description": "Viewer insights"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
         }
     }
 }`

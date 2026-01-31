@@ -2,8 +2,10 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/models"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -195,6 +197,13 @@ func (s *SubscriptionService) SubscribeUser(userId string, tierId string) error 
 		return errors.New("user already has an active subscription")
 	}
 
+	// Get the user for subdomain assignment
+	var user models.User
+	if err := tx.First(&user, "id = ?", userId).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	newSub := models.UserSubscription{
 		UserID:         uuid.MustParse(userId),
 		SubscriptionID: uuid.MustParse(tierId),
@@ -206,7 +215,42 @@ func (s *SubscriptionService) SubscribeUser(userId string, tierId string) error 
 		return err
 	}
 
+	// Auto-assign subdomain based on username if user doesn't have one
+	if user.Domain == nil || user.Domain.Subdomain == "" {
+		subdomain := s.generateUniqueSubdomain(tx, user.Username)
+		if user.Domain == nil {
+			user.Domain = &models.Domain{}
+		}
+		user.Domain.Subdomain = subdomain
+		if err := tx.Save(&user).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
 	return tx.Commit().Error
+}
+
+// generateUniqueSubdomain creates a unique subdomain based on username
+func (s *SubscriptionService) generateUniqueSubdomain(tx *gorm.DB, username string) string {
+	baseSubdomain := strings.ToLower(username)
+	subdomain := baseSubdomain
+
+	// Check if subdomain is taken, append number if needed
+	counter := 1
+	for {
+		var count int64
+		tx.Model(&models.User{}).
+			Where("domain->>'subdomain' = ?", subdomain).
+			Count(&count)
+		if count == 0 {
+			break
+		}
+		subdomain = fmt.Sprintf("%s%d", baseSubdomain, counter)
+		counter++
+	}
+
+	return subdomain
 }
 
 func (s *SubscriptionService) UpgradeUserSubscription(userId string, newTierId string) error {
