@@ -126,7 +126,7 @@ func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error
 }
 
 func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
-	user, err := s.FindUserByEmail(payload.Email)
+	user, err := s.FindUserByEmailOrUsername(payload.Identifier)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
@@ -408,6 +408,16 @@ func (s *AuthService) FindUserByUsername(username string) (*models.User, error) 
 	var user models.User
 
 	if err := s.database.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *AuthService) FindUserByEmailOrUsername(identifier string) (*models.User, error) {
+	var user models.User
+
+	if err := s.database.Where("email = ? OR username = ?", identifier, identifier).First(&user).Error; err != nil {
 		return nil, err
 	}
 
