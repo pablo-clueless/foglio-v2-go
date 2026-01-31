@@ -729,7 +729,7 @@ func (s *PaystackService) GetInvoices(userID string, page, limit int) ([]dto.Inv
 		return nil, 0, err
 	}
 
-	var response []dto.InvoiceResponse
+	response := make([]dto.InvoiceResponse, 0, len(invoices))
 	for _, inv := range invoices {
 		var paidAt *string
 		if inv.PaidAt != nil {

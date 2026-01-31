@@ -113,6 +113,10 @@ func main() {
 	routes.AnalyticsRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 
+	if config.AppConfig.RunSeeds {
+		database.RunSeeds()
+	}
+
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%s", config.AppConfig.Port),
 		Handler:        app,
