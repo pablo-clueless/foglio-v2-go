@@ -65,8 +65,10 @@ type OAuthTokenResponse struct {
 }
 
 type SigninResponse struct {
-	User  models.User `json:"user"`
-	Token string      `json:"token"`
+	User              models.User `json:"user,omitempty"`
+	Token             string      `json:"token,omitempty"`
+	RequiresTwoFactor bool        `json:"requires_two_factor"`
+	UserID            string      `json:"user_id,omitempty"`
 }
 
 func (s *AuthService) CreateUser(payload dto.CreateUserDto) (*models.User, error) {
@@ -135,6 +137,14 @@ func (s *AuthService) Signin(payload dto.SigninDto) (*SigninResponse, error) {
 	err = lib.ComparePassword(payload.Password, user.Password)
 	if err != nil {
 		return nil, errors.New("invalid password")
+	}
+
+	// Check if 2FA is enabled
+	if user.IsTwoFactorEnabled {
+		return &SigninResponse{
+			RequiresTwoFactor: true,
+			UserID:            user.ID.String(),
+		}, nil
 	}
 
 	token, err := lib.GenerateToken(user.ID)
