@@ -4,7 +4,7 @@ import "foglio/v2/src/models"
 
 type CreatePortfolioDto struct {
 	Title    string                   `json:"title" binding:"required,min=1,max=100"`
-	Slug     string                   `json:"slug" binding:"required,min=3,max=50,alphanum"`
+	Slug     string                   `json:"slug" binding:"required,min=3,max=50"`
 	Tagline  *string                  `json:"tagline,omitempty"`
 	Bio      *string                  `json:"bio,omitempty"`
 	Template string                   `json:"template,omitempty"`
