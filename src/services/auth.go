@@ -458,16 +458,43 @@ func (s *AuthService) HandleOAuthCallback(provider string, payload dto.OAuthCall
 		return nil, err
 	}
 
+	if user.IsTwoFactorEnabled {
+		return &SigninResponse{
+			RequiresTwoFactor: true,
+			UserID:            user.ID.String(),
+		}, nil
+	}
+
 	token, err := lib.GenerateToken(user.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	user.Password = ""
-	user.Otp = ""
+	var fullUser models.User
+	if err := s.database.
+		Preload("Projects").
+		Preload("Projects.Stack").
+		Preload("Projects.Highlights").
+		Preload("Experiences").
+		Preload("Experiences.Highlights").
+		Preload("Experiences.Technologies").
+		Preload("Education").
+		Preload("Education.Highlights").
+		Preload("Certifications").
+		Preload("Languages").
+		Preload("Company").
+		Preload("CurrentSubscription").
+		Preload("CurrentSubscription.Subscription").
+		Preload("Portfolio").
+		First(&fullUser, "id = ?", user.ID).Error; err != nil {
+		return nil, err
+	}
+
+	fullUser.Password = ""
+	fullUser.Otp = ""
 
 	return &SigninResponse{
-		User:  *user,
+		User:  fullUser,
 		Token: token,
 	}, nil
 }
