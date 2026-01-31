@@ -48,6 +48,38 @@ const template = `{
                 }
             }
         },
+        "/api/v2/ws": {
+            "get": {
+                "summary": "WebSocket connection",
+                "description": "Establish a WebSocket connection for real-time notifications and chat messaging. Supported actions: send_message, typing, stop_typing, mark_messages_read, mark_read, ping. Messages are received as notifications with event_type in data field.",
+                "tags": ["WebSocket"],
+                "security": [{"Bearer": []}],
+                "responses": {
+                    "101": {"description": "Switching Protocols - WebSocket connection established"},
+                    "400": {"description": "Could not upgrade connection"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/ws/stats": {
+            "get": {
+                "summary": "WebSocket stats",
+                "description": "Get current WebSocket connection statistics",
+                "tags": ["WebSocket"],
+                "responses": {
+                    "200": {
+                        "description": "Connection statistics",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "connected_clients": {"type": "integer", "description": "Total number of connected clients"},
+                                "connected_users": {"type": "integer", "description": "Number of unique users connected"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v2/test/email": {
             "get": {
                 "summary": "Test endpoint",
@@ -3179,6 +3211,775 @@ const template = `{
                 ],
                 "responses": {
                     "200": {"description": "Viewer insights"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/notification-settings": {
+            "get": {
+                "summary": "Get notification settings",
+                "description": "Get current user's notification preferences",
+                "tags": ["Notification Settings"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Notification settings retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "string", "format": "uuid"},
+                                "user_id": {"type": "string", "format": "uuid"},
+                                "email": {
+                                    "type": "object",
+                                    "properties": {
+                                        "app_updates": {"type": "boolean"},
+                                        "new_messages": {"type": "boolean"},
+                                        "job_recommendations": {"type": "boolean"},
+                                        "newsletter": {"type": "boolean"},
+                                        "marketing_emails": {"type": "boolean"}
+                                    }
+                                },
+                                "push": {
+                                    "type": "object",
+                                    "properties": {
+                                        "app_updates": {"type": "boolean"},
+                                        "new_messages": {"type": "boolean"},
+                                        "reminders": {"type": "boolean"}
+                                    }
+                                },
+                                "in_app": {
+                                    "type": "object",
+                                    "properties": {
+                                        "activity_updates": {"type": "boolean"},
+                                        "mentions": {"type": "boolean"},
+                                        "announcements": {"type": "boolean"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"}
+                }
+            },
+            "put": {
+                "summary": "Update all notification settings",
+                "description": "Update all notification preferences at once",
+                "tags": ["Notification Settings"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "object",
+                                    "properties": {
+                                        "app_updates": {"type": "boolean"},
+                                        "new_messages": {"type": "boolean"},
+                                        "job_recommendations": {"type": "boolean"},
+                                        "newsletter": {"type": "boolean"},
+                                        "marketing_emails": {"type": "boolean"}
+                                    }
+                                },
+                                "push": {
+                                    "type": "object",
+                                    "properties": {
+                                        "app_updates": {"type": "boolean"},
+                                        "new_messages": {"type": "boolean"},
+                                        "reminders": {"type": "boolean"}
+                                    }
+                                },
+                                "in_app": {
+                                    "type": "object",
+                                    "properties": {
+                                        "activity_updates": {"type": "boolean"},
+                                        "mentions": {"type": "boolean"},
+                                        "announcements": {"type": "boolean"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Settings updated successfully"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/notification-settings/email": {
+            "put": {
+                "summary": "Update email notification settings",
+                "description": "Update email notification preferences only",
+                "tags": ["Notification Settings"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "app_updates": {"type": "boolean"},
+                                "new_messages": {"type": "boolean"},
+                                "job_recommendations": {"type": "boolean"},
+                                "newsletter": {"type": "boolean"},
+                                "marketing_emails": {"type": "boolean"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Email settings updated"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/notification-settings/push": {
+            "put": {
+                "summary": "Update push notification settings",
+                "description": "Update push notification preferences only",
+                "tags": ["Notification Settings"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "app_updates": {"type": "boolean"},
+                                "new_messages": {"type": "boolean"},
+                                "reminders": {"type": "boolean"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Push settings updated"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/notification-settings/in-app": {
+            "put": {
+                "summary": "Update in-app notification settings",
+                "description": "Update in-app notification preferences only",
+                "tags": ["Notification Settings"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "activity_updates": {"type": "boolean"},
+                                "mentions": {"type": "boolean"},
+                                "announcements": {"type": "boolean"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "In-app settings updated"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/announcements": {
+            "get": {
+                "summary": "Get announcements",
+                "description": "Get announcements for the current user based on their role",
+                "tags": ["Announcements"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 10}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Announcements retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "string", "format": "uuid"},
+                                            "title": {"type": "string"},
+                                            "content": {"type": "string"},
+                                            "type": {"type": "string", "enum": ["ANNOUNCEMENT", "APP_UPDATE", "SYSTEM_ALERT", "MAINTENANCE"]},
+                                            "priority": {"type": "string", "enum": ["LOW", "NORMAL", "HIGH", "CRITICAL"]},
+                                            "show_as_banner": {"type": "boolean"},
+                                            "action_url": {"type": "string"},
+                                            "action_text": {"type": "string"},
+                                            "is_read": {"type": "boolean"},
+                                            "is_dismissed": {"type": "boolean"},
+                                            "published_at": {"type": "string", "format": "date-time"}
+                                        }
+                                    }
+                                },
+                                "total_items": {"type": "integer"},
+                                "total_pages": {"type": "integer"},
+                                "page": {"type": "integer"},
+                                "limit": {"type": "integer"}
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/announcements/banners": {
+            "get": {
+                "summary": "Get active banners",
+                "description": "Get active announcement banners for display",
+                "tags": ["Announcements"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Active banners retrieved",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"type": "string", "format": "uuid"},
+                                    "title": {"type": "string"},
+                                    "content": {"type": "string"},
+                                    "type": {"type": "string"},
+                                    "priority": {"type": "string"},
+                                    "banner_color": {"type": "string"},
+                                    "action_url": {"type": "string"},
+                                    "action_text": {"type": "string"}
+                                }
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/announcements/{id}/read": {
+            "put": {
+                "summary": "Mark announcement as read",
+                "description": "Mark an announcement as read for the current user",
+                "tags": ["Announcements"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement marked as read"},
+                    "401": {"description": "Unauthorized"},
+                    "404": {"description": "Announcement not found"}
+                }
+            }
+        },
+        "/api/v2/announcements/{id}/dismiss": {
+            "put": {
+                "summary": "Dismiss announcement",
+                "description": "Dismiss an announcement for the current user",
+                "tags": ["Announcements"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement dismissed"},
+                    "401": {"description": "Unauthorized"},
+                    "404": {"description": "Announcement not found"}
+                }
+            }
+        },
+        "/api/v2/admin/announcements": {
+            "get": {
+                "summary": "List all announcements (Admin)",
+                "description": "Get all announcements with filtering (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 10},
+                    {"name": "type", "in": "query", "type": "string", "enum": ["ANNOUNCEMENT", "APP_UPDATE", "SYSTEM_ALERT", "MAINTENANCE"]},
+                    {"name": "is_published", "in": "query", "type": "boolean"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcements retrieved"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            },
+            "post": {
+                "summary": "Create announcement (Admin)",
+                "description": "Create a new announcement (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["title", "content", "type"],
+                            "properties": {
+                                "title": {"type": "string", "example": "New Feature Released"},
+                                "content": {"type": "string", "example": "We have released a new messaging feature!"},
+                                "type": {"type": "string", "enum": ["ANNOUNCEMENT", "APP_UPDATE", "SYSTEM_ALERT", "MAINTENANCE"]},
+                                "target_audience": {"type": "string", "enum": ["ALL_USERS", "ADMINS_ONLY", "RECRUITERS_ONLY", "PREMIUM_ONLY"], "default": "ALL_USERS"},
+                                "priority": {"type": "string", "enum": ["LOW", "NORMAL", "HIGH", "CRITICAL"], "default": "NORMAL"},
+                                "show_as_banner": {"type": "boolean", "default": false},
+                                "banner_color": {"type": "string", "example": "#3B82F6"},
+                                "action_url": {"type": "string", "example": "https://example.com/feature"},
+                                "action_text": {"type": "string", "example": "Learn More"},
+                                "scheduled_at": {"type": "string", "format": "date-time"},
+                                "expires_at": {"type": "string", "format": "date-time"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {"description": "Announcement created"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"}
+                }
+            }
+        },
+        "/api/v2/admin/announcements/{id}": {
+            "get": {
+                "summary": "Get announcement (Admin)",
+                "description": "Get a single announcement by ID (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement retrieved"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"},
+                    "404": {"description": "Announcement not found"}
+                }
+            },
+            "put": {
+                "summary": "Update announcement (Admin)",
+                "description": "Update an announcement (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"},
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string"},
+                                "content": {"type": "string"},
+                                "type": {"type": "string", "enum": ["ANNOUNCEMENT", "APP_UPDATE", "SYSTEM_ALERT", "MAINTENANCE"]},
+                                "target_audience": {"type": "string", "enum": ["ALL_USERS", "ADMINS_ONLY", "RECRUITERS_ONLY", "PREMIUM_ONLY"]},
+                                "priority": {"type": "string", "enum": ["LOW", "NORMAL", "HIGH", "CRITICAL"]},
+                                "show_as_banner": {"type": "boolean"},
+                                "banner_color": {"type": "string"},
+                                "action_url": {"type": "string"},
+                                "action_text": {"type": "string"},
+                                "scheduled_at": {"type": "string", "format": "date-time"},
+                                "expires_at": {"type": "string", "format": "date-time"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Announcement updated"},
+                    "400": {"description": "Invalid data"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"},
+                    "404": {"description": "Announcement not found"}
+                }
+            },
+            "delete": {
+                "summary": "Delete announcement (Admin)",
+                "description": "Delete an announcement (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement deleted"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"},
+                    "404": {"description": "Announcement not found"}
+                }
+            }
+        },
+        "/api/v2/admin/announcements/{id}/publish": {
+            "put": {
+                "summary": "Publish announcement (Admin)",
+                "description": "Publish an announcement (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement published"},
+                    "400": {"description": "Announcement already published"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"},
+                    "404": {"description": "Announcement not found"}
+                }
+            }
+        },
+        "/api/v2/admin/announcements/{id}/unpublish": {
+            "put": {
+                "summary": "Unpublish announcement (Admin)",
+                "description": "Unpublish an announcement (admin only)",
+                "tags": ["Announcements - Admin"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Announcement UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Announcement unpublished"},
+                    "400": {"description": "Announcement not published"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Admin access required"},
+                    "404": {"description": "Announcement not found"}
+                }
+            }
+        },
+        "/api/v2/chat/conversations": {
+            "get": {
+                "summary": "Get conversations",
+                "description": "Get all conversations for the current user",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 20}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversations retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "string", "format": "uuid"},
+                                            "other_user": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "string", "format": "uuid"},
+                                                    "name": {"type": "string"},
+                                                    "username": {"type": "string"},
+                                                    "image": {"type": "string"}
+                                                }
+                                            },
+                                            "last_message": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "string", "format": "uuid"},
+                                                    "content": {"type": "string"},
+                                                    "sender_id": {"type": "string", "format": "uuid"},
+                                                    "created_at": {"type": "string", "format": "date-time"}
+                                                }
+                                            },
+                                            "unread_count": {"type": "integer"},
+                                            "created_at": {"type": "string", "format": "date-time"},
+                                            "updated_at": {"type": "string", "format": "date-time"}
+                                        }
+                                    }
+                                },
+                                "total_items": {"type": "integer"},
+                                "total_pages": {"type": "integer"},
+                                "page": {"type": "integer"},
+                                "limit": {"type": "integer"}
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/chat/conversations/{id}": {
+            "get": {
+                "summary": "Get conversation",
+                "description": "Get a single conversation by ID",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Conversation UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Conversation retrieved"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Not a participant"},
+                    "404": {"description": "Conversation not found"}
+                }
+            },
+            "delete": {
+                "summary": "Delete conversation",
+                "description": "Delete a conversation",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Conversation UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Conversation deleted"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Not a participant"},
+                    "404": {"description": "Conversation not found"}
+                }
+            }
+        },
+        "/api/v2/chat/conversations/user/{userId}": {
+            "get": {
+                "summary": "Get or create conversation",
+                "description": "Get an existing conversation with a user or create a new one",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "userId", "in": "path", "required": true, "type": "string", "description": "Other user's UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Conversation retrieved or created"},
+                    "400": {"description": "Cannot message self"},
+                    "401": {"description": "Unauthorized"},
+                    "404": {"description": "User not found"}
+                }
+            }
+        },
+        "/api/v2/chat/messages": {
+            "post": {
+                "summary": "Send message",
+                "description": "Send a direct message to another user. Can include text content, media attachments, or both. Messages can also be sent via WebSocket using the action 'send_message'.",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["recipient_id"],
+                            "properties": {
+                                "recipient_id": {"type": "string", "format": "uuid", "description": "Recipient's user UUID"},
+                                "content": {"type": "string", "description": "Message content (optional if media is provided)", "example": "Hello, how are you?"},
+                                "media": {
+                                    "type": "array",
+                                    "description": "Media attachments (max 10)",
+                                    "maxItems": 10,
+                                    "items": {
+                                        "type": "object",
+                                        "required": ["type", "url"],
+                                        "properties": {
+                                            "type": {"type": "string", "enum": ["IMAGE", "VIDEO", "AUDIO", "DOCUMENT", "FILE"], "description": "Media type"},
+                                            "url": {"type": "string", "format": "url", "description": "URL of the uploaded media"},
+                                            "file_name": {"type": "string", "description": "Original file name"},
+                                            "file_size": {"type": "integer", "description": "File size in bytes"},
+                                            "mime_type": {"type": "string", "description": "MIME type", "example": "image/jpeg"},
+                                            "width": {"type": "integer", "description": "Width in pixels (for images/videos)"},
+                                            "height": {"type": "integer", "description": "Height in pixels (for images/videos)"},
+                                            "duration": {"type": "integer", "description": "Duration in seconds (for audio/video)"},
+                                            "thumbnail": {"type": "string", "description": "Thumbnail URL (for videos)"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Message sent",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "string", "format": "uuid"},
+                                "conversation_id": {"type": "string", "format": "uuid"},
+                                "sender_id": {"type": "string", "format": "uuid"},
+                                "recipient_id": {"type": "string", "format": "uuid"},
+                                "content": {"type": "string"},
+                                "media": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "string"},
+                                            "type": {"type": "string"},
+                                            "url": {"type": "string"},
+                                            "file_name": {"type": "string"},
+                                            "file_size": {"type": "integer"},
+                                            "mime_type": {"type": "string"},
+                                            "width": {"type": "integer"},
+                                            "height": {"type": "integer"},
+                                            "duration": {"type": "integer"},
+                                            "thumbnail": {"type": "string"}
+                                        }
+                                    }
+                                },
+                                "status": {"type": "string", "enum": ["SENT", "DELIVERED", "READ"]},
+                                "created_at": {"type": "string", "format": "date-time"}
+                            }
+                        }
+                    },
+                    "400": {"description": "Cannot message self, message must have content or media"},
+                    "401": {"description": "Unauthorized"},
+                    "404": {"description": "Recipient not found"}
+                }
+            }
+        },
+        "/api/v2/chat/conversations/{id}/messages": {
+            "get": {
+                "summary": "Get messages",
+                "description": "Get messages in a conversation",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Conversation UUID"},
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 50}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "string", "format": "uuid"},
+                                            "conversation_id": {"type": "string", "format": "uuid"},
+                                            "sender_id": {"type": "string", "format": "uuid"},
+                                            "recipient_id": {"type": "string", "format": "uuid"},
+                                            "content": {"type": "string"},
+                                            "media": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {"type": "string"},
+                                                        "type": {"type": "string", "enum": ["IMAGE", "VIDEO", "AUDIO", "DOCUMENT", "FILE"]},
+                                                        "url": {"type": "string"},
+                                                        "file_name": {"type": "string"},
+                                                        "file_size": {"type": "integer"},
+                                                        "mime_type": {"type": "string"},
+                                                        "width": {"type": "integer"},
+                                                        "height": {"type": "integer"},
+                                                        "duration": {"type": "integer"},
+                                                        "thumbnail": {"type": "string"}
+                                                    }
+                                                }
+                                            },
+                                            "status": {"type": "string", "enum": ["SENT", "DELIVERED", "READ"]},
+                                            "read_at": {"type": "string", "format": "date-time"},
+                                            "created_at": {"type": "string", "format": "date-time"},
+                                            "sender": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {"type": "string", "format": "uuid"},
+                                                    "name": {"type": "string"},
+                                                    "username": {"type": "string"},
+                                                    "image": {"type": "string"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "total_items": {"type": "integer"},
+                                "total_pages": {"type": "integer"},
+                                "page": {"type": "integer"},
+                                "limit": {"type": "integer"}
+                            }
+                        }
+                    },
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Not a participant"},
+                    "404": {"description": "Conversation not found"}
+                }
+            }
+        },
+        "/api/v2/chat/conversations/{id}/read": {
+            "put": {
+                "summary": "Mark messages as read",
+                "description": "Mark all messages in a conversation as read",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Conversation UUID"}
+                ],
+                "responses": {
+                    "200": {"description": "Messages marked as read"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Not a participant"},
+                    "404": {"description": "Conversation not found"}
+                }
+            }
+        },
+        "/api/v2/chat/unread": {
+            "get": {
+                "summary": "Get unread count",
+                "description": "Get total unread message count for the current user",
+                "tags": ["Chat"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "Unread count retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "unread_count": {"type": "integer"}
+                            }
+                        }
+                    },
                     "401": {"description": "Unauthorized"}
                 }
             }

@@ -11,10 +11,10 @@ func PortfolioRoutes(router *gin.RouterGroup) *gin.RouterGroup {
 	handler := handlers.NewPortfolioHandler()
 
 	// User's own portfolio management (authenticated)
-	portfolio.POST("/", handler.CreatePortfolio())
-	portfolio.GET("/", handler.GetPortfolio())
-	portfolio.PUT("/", handler.UpdatePortfolio())
-	portfolio.DELETE("/", handler.DeletePortfolio())
+	portfolio.POST("", handler.CreatePortfolio())
+	portfolio.GET("", handler.GetPortfolio())
+	portfolio.PUT("", handler.UpdatePortfolio())
+	portfolio.DELETE("", handler.DeletePortfolio())
 
 	// Publish/Unpublish
 	portfolio.POST("/publish", handler.PublishPortfolio())
