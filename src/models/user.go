@@ -23,6 +23,8 @@ type User struct {
 	Phone               *string            `gorm:"index" json:"phone"`
 	Location            *string            `gorm:"index" json:"location"`
 	Image               *string            `json:"image"`
+	Domain              *Domain            `gorm:"type:jsonb;serializer:json" json:"domain,omitempty"`
+	Portfolio           *Portfolio         `gorm:"foreignKey:UserID" json:"portfolio,omitempty"`
 	Summary             *string            `gorm:"null" json:"summary"`
 	SocialMedia         *SocialMedia       `gorm:"type:jsonb;serializer:json" json:"social_media,omitempty"`
 	CompanyID           *uuid.UUID         `gorm:"type:uuid;index" json:"company_id,omitempty"`
@@ -261,4 +263,13 @@ func (u *User) IsInTrialPeriod() bool {
 		return false
 	}
 	return time.Now().Before(*u.CurrentSubscription.TrialEnd)
+}
+
+func (u *User) CanUseCustomDomain() bool {
+	if u.IsPremium {
+		return true
+	}
+
+	tier := u.GetSubscriptionTier()
+	return tier == TierBasic || tier == TierPremium || tier == TierBusiness
 }

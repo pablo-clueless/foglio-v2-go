@@ -191,6 +191,14 @@ func runMigrations(db *gorm.DB) error {
 		{"020_create_subscription_invoices", &models.SubscriptionInvoice{}},
 		{"021_create_user_subscriptions", &models.UserSubscription{}},
 		{"022_create_paystack_plans", &models.PaystackPlan{}},
+		{"023_create_portfolios", &models.Portfolio{}},
+		{"024_create_portfolio_sections", &models.PortfolioSection{}},
+		{"025_create_page_views", &models.PageView{}},
+		{"026_create_job_views", &models.JobView{}},
+		{"027_create_profile_views", &models.ProfileView{}},
+		{"028_create_portfolio_views", &models.PortfolioView{}},
+		{"029_create_analytics_events", &models.AnalyticsEvent{}},
+		{"030_create_daily_stats", &models.DailyStats{}},
 	}
 
 	pendingCount := 0
