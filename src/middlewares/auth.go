@@ -82,6 +82,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		path := ctx.Request.URL.Path
 		method := ctx.Request.Method
 
+		// Skip authentication for CORS preflight requests
+		if method == http.MethodOptions {
+			ctx.Next()
+			return
+		}
+
 		if isOpenRoute(path, method) {
 			ctx.Next()
 			return
