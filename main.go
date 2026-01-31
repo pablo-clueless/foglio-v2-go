@@ -114,7 +114,10 @@ func main() {
 	app.NoRoute(lib.GlobalNotFound())
 
 	if config.AppConfig.RunSeeds {
-		database.RunSeeds()
+		err = database.RunSeeds()
+		if err != nil {
+			log.Println("an error occurred while seeding", err)
+		}
 	}
 
 	server := &http.Server{
