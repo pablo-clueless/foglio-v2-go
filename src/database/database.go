@@ -273,7 +273,7 @@ func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
 		{
 			name: "037_add_conversation_participants_unique_index",
 			sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_participants_unique
-				  ON conversations (LEAST(participant_1, participant_2), GREATEST(participant_1, participant_2))
+				  ON conversations (LEAST(participant1, participant2), GREATEST(participant1, participant2))
 				  WHERE deleted_at IS NULL`,
 		},
 	}
