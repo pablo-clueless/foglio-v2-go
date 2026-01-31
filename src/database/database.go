@@ -200,6 +200,12 @@ func runMigrations(db *gorm.DB) error {
 		{"029_create_analytics_events", &models.AnalyticsEvent{}},
 		{"030_create_daily_stats", &models.DailyStats{}},
 		{"031_add_two_factor_fields", &models.User{}},
+		{"032_create_notification_settings", &models.NotificationSettings{}},
+		{"033_create_announcements", &models.Announcement{}},
+		{"034_create_user_announcement_status", &models.UserAnnouncementStatus{}},
+		{"035_create_conversations", &models.Conversation{}},
+		{"036_create_messages", &models.Message{}},
+		{"038_add_message_media", &models.Message{}},
 	}
 
 	pendingCount := 0
@@ -258,6 +264,17 @@ func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
 			sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_subscriptions_user_active
 				  ON user_subscriptions (user_id)
 				  WHERE status = 'active' AND deleted_at IS NULL`,
+		},
+		{
+			name: "035_add_user_announcement_status_unique_index",
+			sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_user_announcement_status_unique
+				  ON user_announcement_statuses (user_id, announcement_id)`,
+		},
+		{
+			name: "037_add_conversation_participants_unique_index",
+			sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_participants_unique
+				  ON conversations (LEAST(participant1, participant2), GREATEST(participant1, participant2))
+				  WHERE deleted_at IS NULL`,
 		},
 	}
 

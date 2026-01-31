@@ -9,6 +9,7 @@ import (
 	"foglio/v2/src/lib"
 	"foglio/v2/src/middlewares"
 	"foglio/v2/src/routes"
+	"foglio/v2/src/services"
 	"log"
 	"net/http"
 	"time"
@@ -36,9 +37,8 @@ func main() {
 	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
 
 	app := gin.Default()
-
+	app.RedirectTrailingSlash = false
 	docs.SetupSwagger(app)
-
 	app.Use(gin.Logger())
 
 	corsConfig := cors.Config{
@@ -61,6 +61,11 @@ func main() {
 
 	hub := lib.NewHub()
 	go hub.Run()
+
+	// Set up chat service as WebSocket message handler
+	notificationService := services.NewNotificationService(database.GetDatabase(), hub)
+	chatService := services.NewChatService(database.GetDatabase(), hub, notificationService)
+	hub.SetChatMessageHandler(chatService)
 
 	websocket := lib.NewWebSocketHandler(hub)
 
@@ -103,6 +108,9 @@ func main() {
 	routes.DomainRoutes(router)
 	routes.PortfolioRoutes(router)
 	routes.AnalyticsRoutes(router)
+	routes.NotificationSettingsRoutes(router)
+	routes.AnnouncementRoutes(router, hub)
+	routes.ChatRoutes(router, hub)
 	app.NoRoute(lib.GlobalNotFound())
 
 	if config.AppConfig.RunSeeds {
