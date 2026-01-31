@@ -87,15 +87,40 @@ func (s *TwoFactorService) VerifyCode(userID string, code string) (*models.User,
 		return nil, errors.New("2FA is not enabled for this user")
 	}
 
+	// Verify TOTP code or backup code
+	verified := false
 	if totp.Validate(code, *user.TwoFactorSecret) {
-		return &user, nil
+		verified = true
+	} else if s.verifyAndConsumeBackupCode(&user, code) {
+		verified = true
 	}
 
-	if s.verifyAndConsumeBackupCode(&user, code) {
-		return &user, nil
+	if !verified {
+		return nil, errors.New("invalid verification code")
 	}
 
-	return nil, errors.New("invalid verification code")
+	// Load user with all associations
+	var fullUser models.User
+	if err := s.database.
+		Preload("Projects").
+		Preload("Projects.Stack").
+		Preload("Projects.Highlights").
+		Preload("Experiences").
+		Preload("Experiences.Highlights").
+		Preload("Experiences.Technologies").
+		Preload("Education").
+		Preload("Education.Highlights").
+		Preload("Certifications").
+		Preload("Languages").
+		Preload("Company").
+		Preload("CurrentSubscription").
+		Preload("CurrentSubscription.Subscription").
+		Preload("Portfolio").
+		First(&fullUser, "id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+
+	return &fullUser, nil
 }
 
 func (s *TwoFactorService) Disable2FA(userID string, password string) error {
