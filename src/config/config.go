@@ -117,6 +117,8 @@ func InitializeConfig() {
 			{Endpoint: "/api/v2/subscriptions", Method: http.MethodGet},
 			{Endpoint: "/api/v2/subscriptions/:id", Method: http.MethodGet},
 			{Endpoint: "/api/v2/payments/webhook", Method: http.MethodPost},
+			{Endpoint: "/api/v2/portfolios/:slug", Method: http.MethodGet},
+			{Endpoint: "/api/v2/analytics/track/*", Method: http.MethodPost},
 		},
 	}
 }
