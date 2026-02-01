@@ -55,7 +55,7 @@ type User struct {
 	CreatedAt            time.Time          `json:"created_at"`
 	UpdatedAt            time.Time          `json:"updated_at"`
 	DeletedAt            gorm.DeletedAt     `gorm:"index" json:"-"`
-	VerificationNumber   *string            `gorm:"uniqueIndex;not null" json:"verification_number,omitempty"`
+	VerificationNumber   *string            `gorm:"uniqueIndex" json:"verification_number,omitempty"`
 	VerificationType     *VerificationType  `gorm:"type:verification_type" json:"verification_type,omitempty"`
 	VerificationDocument *string            `gorm:"type:text" json:"verification_document,omitempty"`
 	Verified             bool               `json:"verified"`

@@ -471,6 +471,92 @@ func (s *JobService) GetApplicationsByJob(recruiterId, jobId string, params dto.
 	}, nil
 }
 
+func (s *JobService) GetApplicationsByRecruiter(recruiterId string, params dto.JobApplicationPagination) (*dto.PaginatedResponse[models.JobApplication], error) {
+	if params.Limit <= 0 {
+		params.Limit = 10
+	}
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+
+	recruiterUUID, err := uuid.Parse(recruiterId)
+	if err != nil {
+		return nil, errors.New("invalid recruiter ID")
+	}
+
+	auth := NewAuthService(s.database)
+	recruiter, err := auth.FindUserById(recruiterId)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	if !recruiter.IsRecruiter {
+		return nil, errors.New("only recruiters can view applications")
+	}
+
+	var jobIDs []uuid.UUID
+	if err := s.database.Model(&models.Job{}).
+		Where("created_by = ?", recruiterUUID).
+		Pluck("id", &jobIDs).Error; err != nil {
+		return nil, err
+	}
+
+	if len(jobIDs) == 0 {
+		return &dto.PaginatedResponse[models.JobApplication]{
+			Data:       []models.JobApplication{},
+			Limit:      params.Limit,
+			Page:       params.Page,
+			TotalItems: 0,
+			TotalPages: 0,
+		}, nil
+	}
+
+	var applications []models.JobApplication
+	var totalItems int64
+
+	query := s.database.Model(&models.JobApplication{}).Where("job_id IN ?", jobIDs)
+
+	if params.Status != nil && *params.Status != "" {
+		query = query.Where("status = ?", *params.Status)
+	}
+
+	if params.SubmissionDate != nil && *params.SubmissionDate != "" {
+		query = query.Where("DATE(submission_date) = ?", *params.SubmissionDate)
+	}
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		return &dto.PaginatedResponse[models.JobApplication]{
+			Data:       []models.JobApplication{},
+			Limit:      params.Limit,
+			Page:       params.Page,
+			TotalItems: 0,
+			TotalPages: 0,
+		}, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+
+	if err := query.
+		Preload("Applicant").
+		Preload("Job").
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(params.Limit).
+		Find(&applications).Error; err != nil {
+		return nil, err
+	}
+
+	totalPages := (totalItems + int64(params.Limit) - 1) / int64(params.Limit)
+
+	return &dto.PaginatedResponse[models.JobApplication]{
+		Data:       applications,
+		TotalItems: int(totalItems),
+		TotalPages: int(totalPages),
+		Page:       params.Page,
+		Limit:      params.Limit,
+	}, nil
+}
+
 func (s *JobService) UpdateApplicationStatus(recruiterId, applicationId string, status models.ApplicantStatus, reason *string) (*models.JobApplication, error) {
 	recruiterUUID, err := uuid.Parse(recruiterId)
 	if err != nil {
