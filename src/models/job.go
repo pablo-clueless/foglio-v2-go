@@ -36,7 +36,8 @@ const (
 type Job struct {
 	ID             uuid.UUID        `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Title          string           `json:"title" gorm:"not null"`
-	Company        string           `json:"company" gorm:"not null"`
+	CompanyId      uuid.UUID        `json:"company_id" gorm:"type:uuid;not null;index"`
+	Company        Company          `json:"company" gorm:"foreignKey:CompanyId;references:ID;constraint:OnDelete:CASCADE"`
 	Location       string           `json:"location" gorm:"not null"`
 	Description    string           `json:"description" gorm:"not null"`
 	Requirements   []string         `json:"requirements" gorm:"serializer:json"`

@@ -7,7 +7,7 @@ import (
 
 type CreateJobDto struct {
 	Title          string         `json:"title"`
-	Company        string         `json:"company"`
+	CompanyId      string         `json:"company_id"`
 	Location       string         `json:"location"`
 	Description    string         `json:"description"`
 	Requirements   []string       `json:"requirements" gorm:"serializer:json"`
