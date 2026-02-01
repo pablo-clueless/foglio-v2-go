@@ -3,8 +3,9 @@ package middlewares
 import (
 	"fmt"
 	"foglio/v2/src/config"
+	"foglio/v2/src/database"
 	"foglio/v2/src/lib"
-	"foglio/v2/src/models"
+	"foglio/v2/src/services"
 	"net/http"
 	"sync"
 	"time"
@@ -53,13 +54,14 @@ func defaultSkipCheck(ctx *gin.Context) bool {
 }
 
 func shouldSkipRateLimit(ctx *gin.Context) bool {
-	userInterface, exists := ctx.Get(config.AppConfig.CurrentUser)
+	userId, exists := ctx.Get(config.AppConfig.CurrentUserId)
 	if !exists {
 		return false
 	}
 
-	user, ok := userInterface.(*models.User)
-	if !ok {
+	userService := services.NewUserService(database.GetDatabase())
+	user, err := userService.GetUser(userId.(string))
+	if err != nil {
 		return false
 	}
 
@@ -227,9 +229,11 @@ func RecruiterOrPremiumRateLimiter(standardRequests, premiumRequests int, window
 	return func(ctx *gin.Context) {
 		requests := standardRequests
 
-		userInterface, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if exists {
-			if user, ok := userInterface.(*models.User); ok && user.IsRecruiter {
+		userId, _ := ctx.Get(config.AppConfig.CurrentUserId)
+		userService := services.NewUserService(database.GetDatabase())
+		user, _ := userService.GetUser(userId.(string))
+		if user != nil {
+			if user.IsRecruiter || user.IsPremium {
 				requests = premiumRequests
 			}
 		}
