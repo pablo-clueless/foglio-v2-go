@@ -39,7 +39,7 @@ func SetupTestServer() *TestServer {
 		panic(fmt.Sprintf("Failed to initialize test database: %v", err))
 	}
 
-	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
+	lib.InitialiseJWT(string(config.AppConfig.JWTSecret))
 
 	router := gin.New()
 
