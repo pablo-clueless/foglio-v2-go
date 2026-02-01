@@ -42,6 +42,7 @@ type UpdateUserDto struct {
 	Education      []models.Education     `json:"education,omitempty"`
 	Certifications []models.Certification `json:"certifications,omitempty"`
 	Languages      []models.Language      `json:"languages,omitempty"`
+	Company        *models.Company        `json:"company,omitempty"`
 }
 
 type ChangePasswordDto struct {
@@ -50,7 +51,9 @@ type ChangePasswordDto struct {
 }
 
 type VerificationDto struct {
-	Otp string `json:"otp"`
+	VerificationNumber   *string                  `json:"verification_number,omitempty"`
+	VerificationType     *models.VerificationType `json:"verification_type,omitempty"`
+	VerificationDocument *string                  `json:"verification_document,omitempty"`
 }
 
 type ForgotPasswordDto struct {

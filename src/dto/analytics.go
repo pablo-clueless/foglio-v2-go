@@ -71,43 +71,47 @@ type PlatformOverview struct {
 }
 
 type UserStatsResponse struct {
-	NewUsersToday     int64            `json:"new_users_today"`
-	NewUsersThisWeek  int64            `json:"new_users_this_week"`
-	NewUsersThisMonth int64            `json:"new_users_this_month"`
-	UsersByProvider   []ProviderCount  `json:"users_by_provider"`
-	UsersByLocation   []LocationCount  `json:"users_by_location"`
-	VerificationRate  float64          `json:"verification_rate"`
+	NewUsersToday     int64           `json:"new_users_today"`
+	NewUsersThisWeek  int64           `json:"new_users_this_week"`
+	NewUsersThisMonth int64           `json:"new_users_this_month"`
+	NewUsersInRange   int64           `json:"new_users_in_range"`
+	UsersByProvider   []ProviderCount `json:"users_by_provider"`
+	UsersByLocation   []LocationCount `json:"users_by_location"`
+	VerificationRate  float64         `json:"verification_rate"`
 }
 
 type JobStatsResponse struct {
-	TotalActiveJobs      int64               `json:"total_active_jobs"`
-	NewJobsToday         int64               `json:"new_jobs_today"`
-	NewJobsThisWeek      int64               `json:"new_jobs_this_week"`
-	NewJobsThisMonth     int64               `json:"new_jobs_this_month"`
-	JobsByType           []EmploymentTypeCount `json:"jobs_by_type"`
-	JobsByLocation       []LocationCount     `json:"jobs_by_location"`
-	AverageApplications  float64             `json:"average_applications_per_job"`
-	MostViewedJobs       []JobViewCount      `json:"most_viewed_jobs"`
+	TotalActiveJobs     int64                 `json:"total_active_jobs"`
+	NewJobsToday        int64                 `json:"new_jobs_today"`
+	NewJobsThisWeek     int64                 `json:"new_jobs_this_week"`
+	NewJobsThisMonth    int64                 `json:"new_jobs_this_month"`
+	NewJobsInRange      int64                 `json:"new_jobs_in_range"`
+	JobsByType          []EmploymentTypeCount `json:"jobs_by_type"`
+	JobsByLocation      []LocationCount       `json:"jobs_by_location"`
+	AverageApplications float64               `json:"average_applications_per_job"`
+	MostViewedJobs      []JobViewCount        `json:"most_viewed_jobs"`
 }
 
 type ApplicationStatsResponse struct {
-	TotalApplications      int64                 `json:"total_applications"`
-	ApplicationsToday      int64                 `json:"applications_today"`
-	ApplicationsThisWeek   int64                 `json:"applications_this_week"`
-	ApplicationsThisMonth  int64                 `json:"applications_this_month"`
-	ApplicationsByStatus   []StatusCount         `json:"applications_by_status"`
-	AverageResponseTime    float64               `json:"average_response_time_hours"`
-	AcceptanceRate         float64               `json:"acceptance_rate"`
-	HireRate               float64               `json:"hire_rate"`
+	TotalApplications     int64         `json:"total_applications"`
+	ApplicationsToday     int64         `json:"applications_today"`
+	ApplicationsThisWeek  int64         `json:"applications_this_week"`
+	ApplicationsThisMonth int64         `json:"applications_this_month"`
+	ApplicationsInRange   int64         `json:"applications_in_range"`
+	ApplicationsByStatus  []StatusCount `json:"applications_by_status"`
+	AverageResponseTime   float64       `json:"average_response_time_hours"`
+	AcceptanceRate        float64       `json:"acceptance_rate"`
+	HireRate              float64       `json:"hire_rate"`
 }
 
 type RevenueStatsResponse struct {
-	TotalRevenue          float64           `json:"total_revenue"`
-	RevenueThisMonth      float64           `json:"revenue_this_month"`
-	RevenueLastMonth      float64           `json:"revenue_last_month"`
-	MonthlyGrowth         float64           `json:"monthly_growth"`
-	SubscriptionsByTier   []TierCount       `json:"subscriptions_by_tier"`
-	AverageRevenuePerUser float64           `json:"average_revenue_per_user"`
+	TotalRevenue          float64     `json:"total_revenue"`
+	RevenueThisMonth      float64     `json:"revenue_this_month"`
+	RevenueLastMonth      float64     `json:"revenue_last_month"`
+	RevenueInRange        float64     `json:"revenue_in_range"`
+	MonthlyGrowth         float64     `json:"monthly_growth"`
+	SubscriptionsByTier   []TierCount `json:"subscriptions_by_tier"`
+	AverageRevenuePerUser float64     `json:"average_revenue_per_user"`
 }
 
 type TopPerformersResponse struct {

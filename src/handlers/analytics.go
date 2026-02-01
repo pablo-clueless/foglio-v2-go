@@ -156,15 +156,9 @@ func (h *AnalyticsHandler) TrackEvent() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetAdminDashboard() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -186,15 +180,9 @@ func (h *AnalyticsHandler) GetAdminDashboard() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetPlatformOverview() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -216,15 +204,9 @@ func (h *AnalyticsHandler) GetPlatformOverview() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetUserAnalytics() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -246,15 +228,9 @@ func (h *AnalyticsHandler) GetUserAnalytics() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetJobAnalytics() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -276,15 +252,9 @@ func (h *AnalyticsHandler) GetJobAnalytics() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetApplicationAnalytics() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -306,15 +276,9 @@ func (h *AnalyticsHandler) GetApplicationAnalytics() gin.HandlerFunc {
 
 func (h *AnalyticsHandler) GetRevenueAnalytics() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get("current_user")
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Admin access required")
 			return
 		}
 
@@ -337,15 +301,8 @@ func (h *AnalyticsHandler) GetRevenueAnalytics() gin.HandlerFunc {
 func (h *AnalyticsHandler) GetRecruiterDashboard() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		user, exists := ctx.Get("current_user")
-		if !exists || userID == "" {
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsRecruiter && !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Recruiter access required")
 			return
 		}
 
@@ -368,15 +325,8 @@ func (h *AnalyticsHandler) GetRecruiterDashboard() gin.HandlerFunc {
 func (h *AnalyticsHandler) GetRecruiterJobPerformance() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		user, exists := ctx.Get("current_user")
-		if !exists || userID == "" {
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsRecruiter && !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Recruiter access required")
 			return
 		}
 
@@ -399,15 +349,8 @@ func (h *AnalyticsHandler) GetRecruiterJobPerformance() gin.HandlerFunc {
 func (h *AnalyticsHandler) GetRecruiterApplicationStats() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		user, exists := ctx.Get("current_user")
-		if !exists || userID == "" {
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
-			return
-		}
-
-		currentUser := user.(*models.User)
-		if !currentUser.IsRecruiter && !currentUser.IsAdmin {
-			lib.Forbidden(ctx, "Recruiter access required")
 			return
 		}
 
