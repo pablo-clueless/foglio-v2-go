@@ -1109,6 +1109,52 @@ const template = `{
                 }
             }
         },
+        "/api/v2/jobs/applications/recruiter": {
+            "get": {
+                "summary": "Get all applications for recruiter",
+                "description": "Get all applications from all jobs posted by the authenticated recruiter",
+                "tags": ["Job Applications"],
+                "security": [{"Bearer": []}],
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Items per page"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Filter by application status"
+                    },
+                    {
+                        "name": "submission_date",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Filter by submission date (YYYY-MM-DD)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of all applications for recruiter's jobs"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - only recruiters can access this endpoint"
+                    }
+                }
+            }
+        },
         "/api/v2/jobs/applications/job/{id}": {
             "get": {
                 "summary": "Get applications for job",
@@ -3981,6 +4027,137 @@ const template = `{
                         }
                     },
                     "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/reviews": {
+            "get": {
+                "summary": "Get all reviews",
+                "description": "Retrieve paginated list of reviews",
+                "tags": ["Reviews"],
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "description": "Page number"},
+                    {"name": "size", "in": "query", "type": "integer", "description": "Items per page"},
+                    {"name": "rating", "in": "query", "type": "integer", "description": "Filter by rating (0-5)"}
+                ],
+                "responses": {
+                    "200": {"description": "Reviews fetched successfully"}
+                }
+            },
+            "post": {
+                "summary": "Create a review",
+                "description": "Create a new review (one per user)",
+                "tags": ["Reviews"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": ["comment", "rating"],
+                            "properties": {
+                                "comment": {"type": "string", "description": "Review comment"},
+                                "rating": {"type": "integer", "minimum": 0, "maximum": 5, "description": "Rating from 0 to 5"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Review created successfully"},
+                    "400": {"description": "Bad request or already submitted a review"},
+                    "401": {"description": "Unauthorized"}
+                }
+            }
+        },
+        "/api/v2/reviews/me": {
+            "get": {
+                "summary": "Get my review",
+                "description": "Get the current user's review",
+                "tags": ["Reviews"],
+                "security": [{"Bearer": []}],
+                "responses": {
+                    "200": {"description": "Review fetched successfully"},
+                    "401": {"description": "Unauthorized"},
+                    "404": {"description": "Review not found"}
+                }
+            }
+        },
+        "/api/v2/reviews/stats": {
+            "get": {
+                "summary": "Get review statistics",
+                "description": "Get average rating and total review count",
+                "tags": ["Reviews"],
+                "responses": {
+                    "200": {
+                        "description": "Statistics fetched successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "average_rating": {"type": "number", "description": "Average rating"},
+                                "total_reviews": {"type": "integer", "description": "Total number of reviews"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/reviews/{id}": {
+            "get": {
+                "summary": "Get a review",
+                "description": "Get a specific review by ID",
+                "tags": ["Reviews"],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Review ID"}
+                ],
+                "responses": {
+                    "200": {"description": "Review fetched successfully"},
+                    "404": {"description": "Review not found"}
+                }
+            },
+            "put": {
+                "summary": "Update a review",
+                "description": "Update your own review",
+                "tags": ["Reviews"],
+                "security": [{"Bearer": []}],
+                "consumes": ["application/json"],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Review ID"},
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "comment": {"type": "string", "description": "Review comment"},
+                                "rating": {"type": "integer", "minimum": 0, "maximum": 5, "description": "Rating from 0 to 5"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {"description": "Review updated successfully"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Forbidden - can only update your own review"},
+                    "404": {"description": "Review not found"}
+                }
+            },
+            "delete": {
+                "summary": "Delete a review",
+                "description": "Delete your own review",
+                "tags": ["Reviews"],
+                "security": [{"Bearer": []}],
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string", "description": "Review ID"}
+                ],
+                "responses": {
+                    "200": {"description": "Review deleted successfully"},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Forbidden - can only delete your own review"},
+                    "404": {"description": "Review not found"}
                 }
             }
         }

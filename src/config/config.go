@@ -31,7 +31,7 @@ type Config struct {
 	GoogleClientSecret    string
 	GoogleRedirectUrl     string
 	IsDevMode             bool
-	JWTTokenSecret        []byte
+	JWTSecret             []byte
 	MaxFileSize           int
 	NonAuthRoutes         []APIRoute
 	PaystackSecretKey     string
@@ -71,7 +71,7 @@ func InitializeConfig() {
 		GoogleClientSecret:    os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectUrl:     os.Getenv("GOOGLE_REDIRECT_URL"),
 		IsDevMode:             os.Getenv("GO_ENV") == "development",
-		JWTTokenSecret:        []byte(os.Getenv("JWT_SECRET")),
+		JWTSecret:             []byte(os.Getenv("JWT_SECRET")),
 		MaxFileSize:           10 << 20, // default 10 MB
 		PaystackSecretKey:     os.Getenv("PAYSTACK_SECRET_KEY"),
 		PaystackPublicKey:     os.Getenv("PAYSTACK_PUBLIC_KEY"),
@@ -117,6 +117,9 @@ func InitializeConfig() {
 			{Endpoint: "/api/v2/payments/webhook", Method: http.MethodPost},
 			{Endpoint: "/api/v2/portfolios/:slug", Method: http.MethodGet},
 			{Endpoint: "/api/v2/analytics/track/*", Method: http.MethodPost},
+			{Endpoint: "/api/v2/reviews", Method: http.MethodGet},
+			{Endpoint: "/api/v2/reviews/stats", Method: http.MethodGet},
+			{Endpoint: "/api/v2/reviews/:id", Method: http.MethodGet},
 		},
 	}
 }

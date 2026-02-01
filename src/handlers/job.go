@@ -191,6 +191,30 @@ func (h *JobHandler) GetApplicationsByJob() gin.HandlerFunc {
 	}
 }
 
+func (h *JobHandler) GetApplicationsByRecruiter() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.GetString(config.AppConfig.CurrentUserId)
+		var query dto.JobApplicationPagination
+
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			lib.BadRequest(ctx, err.Error(), "400")
+			return
+		}
+
+		applications, err := h.service.GetApplicationsByRecruiter(id, query)
+		if err != nil {
+			if err.Error() == "only recruiters can view applications" {
+				lib.Forbidden(ctx, err.Error())
+				return
+			}
+			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
+			return
+		}
+
+		lib.Success(ctx, "Applications fetched successfully", applications)
+	}
+}
+
 func (h *JobHandler) AcceptApplication() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.GetString(config.AppConfig.CurrentUserId)

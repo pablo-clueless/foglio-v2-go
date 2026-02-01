@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/models"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -197,7 +199,6 @@ func (s *SubscriptionService) SubscribeUser(userId string, tierId string) error 
 		return errors.New("user already has an active subscription")
 	}
 
-	// Get the user for subdomain assignment
 	var user models.User
 	if err := tx.First(&user, "id = ?", userId).Error; err != nil {
 		tx.Rollback()
@@ -215,7 +216,6 @@ func (s *SubscriptionService) SubscribeUser(userId string, tierId string) error 
 		return err
 	}
 
-	// Auto-assign subdomain based on username if user doesn't have one
 	if user.Domain == nil || user.Domain.Subdomain == "" {
 		subdomain := s.generateUniqueSubdomain(tx, user.Username)
 		if user.Domain == nil {
@@ -231,12 +231,10 @@ func (s *SubscriptionService) SubscribeUser(userId string, tierId string) error 
 	return tx.Commit().Error
 }
 
-// generateUniqueSubdomain creates a unique subdomain based on username
 func (s *SubscriptionService) generateUniqueSubdomain(tx *gorm.DB, username string) string {
 	baseSubdomain := strings.ToLower(username)
 	subdomain := baseSubdomain
 
-	// Check if subdomain is taken, append number if needed
 	counter := 1
 	for {
 		var count int64
@@ -337,4 +335,52 @@ func normalizeSubscriptionQuery(q dto.Pagination) dto.Pagination {
 	}
 
 	return q
+}
+
+func (s *SubscriptionService) ProcessExpiredSubscriptions() error {
+	now := time.Now()
+
+	var expiredSubs []models.UserSubscription
+	err := s.database.
+		Where("status = ?", "active").
+		Where("is_active = ?", true).
+		Where("current_period_end < ?", now).
+		Find(&expiredSubs).Error
+
+	if err != nil {
+		return err
+	}
+
+	if len(expiredSubs) == 0 {
+		return nil
+	}
+
+	log.Printf("Found %d expired subscriptions to process", len(expiredSubs))
+
+	for _, sub := range expiredSubs {
+		tx := s.database.Begin()
+		sub.Status = "expired"
+		sub.IsActive = false
+		if err := tx.Save(&sub).Error; err != nil {
+			tx.Rollback()
+			log.Printf("Failed to update subscription %s: %v", sub.ID, err)
+			continue
+		}
+		if err := tx.Model(&models.User{}).
+			Where("id = ?", sub.UserID).
+			Update("is_premium", false).Error; err != nil {
+			tx.Rollback()
+			log.Printf("Failed to update user %s premium status: %v", sub.UserID, err)
+			continue
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			log.Printf("Failed to commit transaction for subscription %s: %v", sub.ID, err)
+			continue
+		}
+
+		log.Printf("Expired subscription %s for user %s", sub.ID, sub.UserID)
+	}
+
+	return nil
 }
