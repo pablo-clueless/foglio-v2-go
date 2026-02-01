@@ -125,7 +125,7 @@ func main() {
 
 	err = scheduler.AddJob("0 0 * * * *", func() {
 		log.Println("Running subscription expiry check...")
-		if err := subscriptionService.ProcessExpiredSubscriptions(); err != nil {
+		if err = subscriptionService.ProcessExpiredSubscriptions(); err != nil {
 			log.Printf("Error processing expired subscriptions: %v", err)
 		}
 	})
