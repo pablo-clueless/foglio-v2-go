@@ -878,6 +878,545 @@
           }
         }
       }
+    },
+    "/api/v2/analytics/track/page-view": {
+      "post": {
+        "summary": "Track page view",
+        "description": "Track a page view event",
+        "tags": ["Analytics - Tracking"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["path", "session_id"],
+              "properties": {
+                "path": {"type": "string", "example": "/jobs"},
+                "session_id": {"type": "string", "example": "sess_123abc"},
+                "referrer": {"type": "string", "example": "https://google.com"},
+                "duration": {"type": "integer", "example": 120}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Page view tracked"}
+        }
+      }
+    },
+    "/api/v2/analytics/track/job-view": {
+      "post": {
+        "summary": "Track job view",
+        "description": "Track a job listing view event",
+        "tags": ["Analytics - Tracking"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["job_id", "session_id"],
+              "properties": {
+                "job_id": {"type": "string", "format": "uuid"},
+                "session_id": {"type": "string"},
+                "referrer": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Job view tracked"}
+        }
+      }
+    },
+    "/api/v2/analytics/track/profile-view": {
+      "post": {
+        "summary": "Track profile view",
+        "description": "Track a user profile view event",
+        "tags": ["Analytics - Tracking"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["profile_user_id", "session_id"],
+              "properties": {
+                "profile_user_id": {"type": "string", "format": "uuid"},
+                "session_id": {"type": "string"},
+                "referrer": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Profile view tracked"}
+        }
+      }
+    },
+    "/api/v2/analytics/track/portfolio-view": {
+      "post": {
+        "summary": "Track portfolio view",
+        "description": "Track a portfolio view event",
+        "tags": ["Analytics - Tracking"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["portfolio_id", "session_id"],
+              "properties": {
+                "portfolio_id": {"type": "string", "format": "uuid"},
+                "session_id": {"type": "string"},
+                "referrer": {"type": "string"},
+                "duration": {"type": "integer"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Portfolio view tracked"}
+        }
+      }
+    },
+    "/api/v2/analytics/track/event": {
+      "post": {
+        "summary": "Track custom event",
+        "description": "Track a custom analytics event",
+        "tags": ["Analytics - Tracking"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["event_type", "session_id"],
+              "properties": {
+                "event_type": {"type": "string", "example": "button_click"},
+                "entity_id": {"type": "string", "format": "uuid"},
+                "entity_type": {"type": "string", "example": "job"},
+                "session_id": {"type": "string"},
+                "properties": {"type": "object"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Event tracked"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/dashboard": {
+      "get": {
+        "summary": "Get admin dashboard analytics",
+        "description": "Get comprehensive platform analytics for administrators. All stats are filtered by the specified date range.",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"},
+          {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"], "description": "Group trend data by period"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin dashboard analytics",
+            "schema": {"$ref": "#/definitions/AdminDashboardAnalytics"}
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/overview": {
+      "get": {
+        "summary": "Get platform overview",
+        "description": "Get high-level platform metrics",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Platform overview"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/users": {
+      "get": {
+        "summary": "Get user analytics",
+        "description": "Get user registration and activity statistics filtered by date range",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {
+            "description": "User analytics",
+            "schema": {"$ref": "#/definitions/UserStatsResponse"}
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/jobs": {
+      "get": {
+        "summary": "Get job analytics",
+        "description": "Get job posting statistics filtered by date range",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Job analytics",
+            "schema": {"$ref": "#/definitions/JobStatsResponse"}
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/applications": {
+      "get": {
+        "summary": "Get application analytics",
+        "description": "Get job application statistics filtered by date range",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Application analytics",
+            "schema": {"$ref": "#/definitions/ApplicationStatsResponse"}
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/admin/revenue": {
+      "get": {
+        "summary": "Get revenue analytics",
+        "description": "Get subscription revenue statistics filtered by date range",
+        "tags": ["Analytics - Admin"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue analytics",
+            "schema": {"$ref": "#/definitions/RevenueStatsResponse"}
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/recruiter/dashboard": {
+      "get": {
+        "summary": "Get recruiter dashboard",
+        "description": "Get analytics for the authenticated recruiter filtered by date range",
+        "tags": ["Analytics - Recruiter"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"},
+          {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"]}
+        ],
+        "responses": {
+          "200": {"description": "Recruiter dashboard analytics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/recruiter/jobs": {
+      "get": {
+        "summary": "Get recruiter job performance",
+        "description": "Get job performance metrics for the authenticated recruiter",
+        "tags": ["Analytics - Recruiter"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Job performance analytics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/recruiter/applications": {
+      "get": {
+        "summary": "Get recruiter application stats",
+        "description": "Get application statistics for the authenticated recruiter",
+        "tags": ["Analytics - Recruiter"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Application statistics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/talent/dashboard": {
+      "get": {
+        "summary": "Get talent dashboard",
+        "description": "Get analytics for the authenticated talent/job seeker filtered by date range",
+        "tags": ["Analytics - Talent"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"},
+          {"name": "group_by", "in": "query", "type": "string", "enum": ["day", "week", "month"]}
+        ],
+        "responses": {
+          "200": {"description": "Talent dashboard analytics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/talent/profile-views": {
+      "get": {
+        "summary": "Get profile views analytics",
+        "description": "Get profile view statistics for the authenticated user",
+        "tags": ["Analytics - Talent"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Profile views analytics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/talent/portfolio": {
+      "get": {
+        "summary": "Get portfolio analytics",
+        "description": "Get portfolio view statistics for the authenticated user",
+        "tags": ["Analytics - Talent"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Portfolio analytics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/talent/applications": {
+      "get": {
+        "summary": "Get talent application stats",
+        "description": "Get application statistics for the authenticated talent",
+        "tags": ["Analytics - Talent"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Application statistics"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/v2/analytics/talent/viewer-insights": {
+      "get": {
+        "summary": "Get viewer insights",
+        "description": "Get insights about who viewed your profile filtered by date range",
+        "tags": ["Analytics - Talent"],
+        "security": [{"Bearer": []}],
+        "produces": ["application/json"],
+        "parameters": [
+          {"name": "start_date", "in": "query", "type": "string", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Viewer insights"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "UserStatsResponse": {
+      "type": "object",
+      "properties": {
+        "new_users_today": {"type": "integer", "description": "Users registered today"},
+        "new_users_this_week": {"type": "integer", "description": "Users registered this week"},
+        "new_users_this_month": {"type": "integer", "description": "Users registered this month"},
+        "new_users_in_range": {"type": "integer", "description": "Users registered within the specified date range"},
+        "users_by_provider": {"type": "array", "items": {"$ref": "#/definitions/ProviderCount"}},
+        "users_by_location": {"type": "array", "items": {"$ref": "#/definitions/LocationCount"}},
+        "verification_rate": {"type": "number", "description": "Percentage of verified users in date range"}
+      }
+    },
+    "JobStatsResponse": {
+      "type": "object",
+      "properties": {
+        "total_active_jobs": {"type": "integer"},
+        "new_jobs_today": {"type": "integer"},
+        "new_jobs_this_week": {"type": "integer"},
+        "new_jobs_this_month": {"type": "integer"},
+        "new_jobs_in_range": {"type": "integer", "description": "Jobs created within the specified date range"},
+        "jobs_by_type": {"type": "array", "items": {"$ref": "#/definitions/EmploymentTypeCount"}},
+        "jobs_by_location": {"type": "array", "items": {"$ref": "#/definitions/LocationCount"}},
+        "average_applications_per_job": {"type": "number"},
+        "most_viewed_jobs": {"type": "array", "items": {"$ref": "#/definitions/JobViewCount"}}
+      }
+    },
+    "ApplicationStatsResponse": {
+      "type": "object",
+      "properties": {
+        "total_applications": {"type": "integer"},
+        "applications_today": {"type": "integer"},
+        "applications_this_week": {"type": "integer"},
+        "applications_this_month": {"type": "integer"},
+        "applications_in_range": {"type": "integer", "description": "Applications submitted within the specified date range"},
+        "applications_by_status": {"type": "array", "items": {"$ref": "#/definitions/StatusCount"}},
+        "average_response_time_hours": {"type": "number"},
+        "acceptance_rate": {"type": "number", "description": "Percentage of accepted applications in date range"},
+        "hire_rate": {"type": "number", "description": "Percentage of hired applications in date range"}
+      }
+    },
+    "RevenueStatsResponse": {
+      "type": "object",
+      "properties": {
+        "total_revenue": {"type": "number"},
+        "revenue_this_month": {"type": "number"},
+        "revenue_last_month": {"type": "number"},
+        "revenue_in_range": {"type": "number", "description": "Revenue generated within the specified date range"},
+        "monthly_growth": {"type": "number", "description": "Month-over-month growth percentage"},
+        "subscriptions_by_tier": {"type": "array", "items": {"$ref": "#/definitions/TierCount"}},
+        "average_revenue_per_user": {"type": "number"}
+      }
+    },
+    "AdminDashboardAnalytics": {
+      "type": "object",
+      "properties": {
+        "overview": {"$ref": "#/definitions/PlatformOverview"},
+        "user_stats": {"$ref": "#/definitions/UserStatsResponse"},
+        "job_stats": {"$ref": "#/definitions/JobStatsResponse"},
+        "application_stats": {"$ref": "#/definitions/ApplicationStatsResponse"},
+        "revenue_stats": {"$ref": "#/definitions/RevenueStatsResponse"},
+        "trend_data": {"type": "array", "items": {"$ref": "#/definitions/TrendDataPoint"}},
+        "top_performers": {"$ref": "#/definitions/TopPerformersResponse"}
+      }
+    },
+    "PlatformOverview": {
+      "type": "object",
+      "properties": {
+        "total_users": {"type": "integer"},
+        "total_recruiters": {"type": "integer"},
+        "total_talents": {"type": "integer"},
+        "total_jobs": {"type": "integer"},
+        "total_applications": {"type": "integer"},
+        "total_page_views": {"type": "integer"},
+        "unique_visitors": {"type": "integer"},
+        "active_subscriptions": {"type": "integer"},
+        "growth_rate": {"type": "number"}
+      }
+    },
+    "TopPerformersResponse": {
+      "type": "object",
+      "properties": {
+        "top_recruiters": {"type": "array", "items": {"type": "object"}},
+        "top_jobs": {"type": "array", "items": {"type": "object"}},
+        "top_talents": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "TrendDataPoint": {
+      "type": "object",
+      "properties": {
+        "date": {"type": "string"},
+        "value": {"type": "integer"},
+        "label": {"type": "string"}
+      }
+    },
+    "ProviderCount": {
+      "type": "object",
+      "properties": {
+        "provider": {"type": "string"},
+        "count": {"type": "integer"}
+      }
+    },
+    "LocationCount": {
+      "type": "object",
+      "properties": {
+        "location": {"type": "string"},
+        "count": {"type": "integer"}
+      }
+    },
+    "EmploymentTypeCount": {
+      "type": "object",
+      "properties": {
+        "type": {"type": "string"},
+        "count": {"type": "integer"}
+      }
+    },
+    "StatusCount": {
+      "type": "object",
+      "properties": {
+        "status": {"type": "string"},
+        "count": {"type": "integer"}
+      }
+    },
+    "TierCount": {
+      "type": "object",
+      "properties": {
+        "tier": {"type": "string"},
+        "count": {"type": "integer"}
+      }
+    },
+    "JobViewCount": {
+      "type": "object",
+      "properties": {
+        "job_id": {"type": "string"},
+        "title": {"type": "string"},
+        "views": {"type": "integer"}
+      }
     }
   }
 }

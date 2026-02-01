@@ -100,7 +100,7 @@ func (h *AuthHandler) Verification() gin.HandlerFunc {
 			return
 		}
 
-		user, err := h.service.Verification(payload.Otp)
+		user, err := h.service.Verification(payload)
 		if err != nil {
 			lib.InternalServerError(ctx, err.Error())
 			return
