@@ -5,6 +5,7 @@ import (
 	"foglio/v2/src/database"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
+	"foglio/v2/src/models"
 	"foglio/v2/src/services"
 	"strconv"
 
@@ -12,33 +13,25 @@ import (
 )
 
 type AnnouncementHandler struct {
-	service     *services.AnnouncementService
-	authService *services.AuthService
+	service *services.AnnouncementService
 }
 
 func NewAnnouncementHandler(hub *lib.Hub) *AnnouncementHandler {
-	db := database.GetDatabase()
 	return &AnnouncementHandler{
-		service:     services.NewAnnouncementService(db, hub),
-		authService: services.NewAuthService(db),
+		service: services.NewAnnouncementService(database.GetDatabase(), hub),
 	}
 }
 
 // ==================== ADMIN ENDPOINTS ====================
 func (h *AnnouncementHandler) CreateAnnouncement() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -50,7 +43,7 @@ func (h *AnnouncementHandler) CreateAnnouncement() gin.HandlerFunc {
 			return
 		}
 
-		announcement, err := h.service.CreateAnnouncement(userID, payload)
+		announcement, err := h.service.CreateAnnouncement(currentUser.ID.String(), payload)
 		if err != nil {
 			lib.InternalServerError(ctx, "Failed to create announcement: "+err.Error())
 			return
@@ -62,18 +55,13 @@ func (h *AnnouncementHandler) CreateAnnouncement() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) UpdateAnnouncement() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -103,18 +91,13 @@ func (h *AnnouncementHandler) UpdateAnnouncement() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) PublishAnnouncement() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -138,18 +121,13 @@ func (h *AnnouncementHandler) PublishAnnouncement() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) UnpublishAnnouncement() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -173,18 +151,13 @@ func (h *AnnouncementHandler) UnpublishAnnouncement() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) DeleteAnnouncement() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -207,18 +180,13 @@ func (h *AnnouncementHandler) DeleteAnnouncement() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) GetAnnouncementAdmin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -242,18 +210,13 @@ func (h *AnnouncementHandler) GetAnnouncementAdmin() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) GetAnnouncementsAdmin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
-
+		currentUser := user.(*models.User)
 		if !currentUser.IsAdmin {
 			lib.Forbidden(ctx, "Admin access required")
 			return
@@ -278,17 +241,13 @@ func (h *AnnouncementHandler) GetAnnouncementsAdmin() gin.HandlerFunc {
 // ==================== USER ENDPOINTS ====================
 func (h *AnnouncementHandler) GetAnnouncements() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
+		currentUser := user.(*models.User)
 
 		page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 		limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
@@ -305,17 +264,13 @@ func (h *AnnouncementHandler) GetAnnouncements() gin.HandlerFunc {
 
 func (h *AnnouncementHandler) GetActiveBanners() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.GetString(config.AppConfig.CurrentUserId)
-		if userID == "" {
+		user, exists := ctx.Get("current_user")
+		if !exists {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser, err := h.authService.FindUserById(userID)
-		if err != nil {
-			lib.Unauthorized(ctx, "User not found")
-			return
-		}
+		currentUser := user.(*models.User)
 
 		banners, err := h.service.GetActiveBanners(currentUser)
 		if err != nil {
