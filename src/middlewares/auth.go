@@ -116,6 +116,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Set(config.AppConfig.CurrentUserId, user.ID.String())
+		ctx.Set("current_user", user)
 		ctx.Next()
 	}
 }
