@@ -108,7 +108,7 @@ func (s *NotificationService) GetNotifications(id string, params dto.Pagination)
 	var notifications []models.Notification
 	var totalItems int64
 
-	query := s.database.Model(models.Notification{})
+	query := s.database.Model(models.Notification{}).Where("owner_id = ?", id)
 
 	if err := query.Count(&totalItems).Error; err != nil {
 		return &dto.PaginatedResponse[models.Notification]{
@@ -122,7 +122,7 @@ func (s *NotificationService) GetNotifications(id string, params dto.Pagination)
 
 	offset := (params.Page - 1) * params.Limit
 
-	if err := query.Where("owner_id = ?", id).Offset(offset).Order("created_at DESC").Limit(params.Limit).
+	if err := query.Offset(offset).Order("created_at DESC").Limit(params.Limit).
 		Find(&notifications).Error; err != nil {
 		return nil, err
 	}

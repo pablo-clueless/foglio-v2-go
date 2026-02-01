@@ -10,6 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type VerificationType string
+
+const (
+	DriversLicense        VerificationType = "DRIVERS_LICENSE"
+	InternationalPassport VerificationType = "INTERNATIONAL_PASSPORT"
+	NationalIdCard        VerificationType = "NATIONAL_ID_CARD"
+	VotersCard            VerificationType = "VOTERS_CARD"
+)
+
 type User struct {
 	ID                   uuid.UUID          `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name                 string             `gorm:"not null" json:"name"`
@@ -46,6 +55,9 @@ type User struct {
 	CreatedAt            time.Time          `json:"created_at"`
 	UpdatedAt            time.Time          `json:"updated_at"`
 	DeletedAt            gorm.DeletedAt     `gorm:"index" json:"-"`
+	VerificationNumber   *string            `gorm:"uniqueIndex;not null" json:"verification_number,omitempty"`
+	VerificationType     *VerificationType  `gorm:"type:verification_type" json:"verification_type,omitempty"`
+	VerificationDocument *string            `gorm:"type:text" json:"verification_document,omitempty"`
 	Verified             bool               `json:"verified"`
 	Otp                  string             `json:"otp"`
 }

@@ -27,8 +27,6 @@ func NewAnalyticsService(database *gorm.DB) *AnalyticsService {
 }
 
 // ==================== TRACKING METHODS ====================
-
-// TrackPageView records a page view
 func (s *AnalyticsService) TrackPageView(userID *string, payload dto.TrackPageViewDto, ipAddress, userAgent string) error {
 	var uid *uuid.UUID
 	if userID != nil && *userID != "" {
@@ -58,7 +56,6 @@ func (s *AnalyticsService) TrackPageView(userID *string, payload dto.TrackPageVi
 	return s.database.Create(pageView).Error
 }
 
-// TrackJobView records a job view
 func (s *AnalyticsService) TrackJobView(userID *string, payload dto.TrackJobViewDto, ipAddress, userAgent string) error {
 	jobID, err := uuid.Parse(payload.JobID)
 	if err != nil {
@@ -85,7 +82,6 @@ func (s *AnalyticsService) TrackJobView(userID *string, payload dto.TrackJobView
 	return s.database.Create(jobView).Error
 }
 
-// TrackProfileView records a profile view
 func (s *AnalyticsService) TrackProfileView(viewerUserID *string, payload dto.TrackProfileViewDto, ipAddress, userAgent string, isRecruiter bool) error {
 	profileUserID, err := uuid.Parse(payload.ProfileUserID)
 	if err != nil {
@@ -113,7 +109,6 @@ func (s *AnalyticsService) TrackProfileView(viewerUserID *string, payload dto.Tr
 	return s.database.Create(profileView).Error
 }
 
-// TrackPortfolioView records a portfolio view
 func (s *AnalyticsService) TrackPortfolioView(viewerUserID *string, payload dto.TrackPortfolioViewDto, ipAddress, userAgent string) error {
 	portfolioID, err := uuid.Parse(payload.PortfolioID)
 	if err != nil {
@@ -144,7 +139,6 @@ func (s *AnalyticsService) TrackPortfolioView(viewerUserID *string, payload dto.
 	return s.database.Create(portfolioView).Error
 }
 
-// TrackEvent records a custom event
 func (s *AnalyticsService) TrackEvent(userID *string, payload dto.TrackEventDto) error {
 	var uid *uuid.UUID
 	if userID != nil && *userID != "" {
@@ -176,7 +170,6 @@ func (s *AnalyticsService) TrackEvent(userID *string, payload dto.TrackEventDto)
 
 // ==================== ADMIN ANALYTICS ====================
 
-// GetAdminDashboardAnalytics returns comprehensive platform analytics for admins
 func (s *AnalyticsService) GetAdminDashboardAnalytics(params dto.AnalyticsQueryParams) (*dto.AdminDashboardAnalytics, error) {
 	startDate, endDate := s.parseDateRange(params)
 
@@ -212,7 +205,6 @@ func (s *AnalyticsService) getPlatformOverview() dto.PlatformOverview {
 	s.database.Model(&models.PageView{}).Distinct("session_id").Count(&uniqueVisitors)
 	s.database.Model(&models.UserSubscription{}).Where("status = ?", "active").Count(&activeSubscriptions)
 
-	// Calculate growth rate (comparing this month to last month)
 	var usersThisMonth, usersLastMonth int64
 	now := time.Now()
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
@@ -245,29 +237,31 @@ func (s *AnalyticsService) getUserStats(startDate, endDate time.Time) dto.UserSt
 	weekAgo := today.AddDate(0, 0, -7)
 	monthAgo := today.AddDate(0, -1, 0)
 
-	var newToday, newWeek, newMonth int64
+	var newToday, newWeek, newMonth, newInRange int64
 	s.database.Model(&models.User{}).Where("created_at >= ?", today).Count(&newToday)
 	s.database.Model(&models.User{}).Where("created_at >= ?", weekAgo).Count(&newWeek)
 	s.database.Model(&models.User{}).Where("created_at >= ?", monthAgo).Count(&newMonth)
+	s.database.Model(&models.User{}).Where("created_at BETWEEN ? AND ?", startDate, endDate).Count(&newInRange)
 
 	var providers []dto.ProviderCount
 	s.database.Model(&models.User{}).
 		Select("provider, count(*) as count").
+		Where("created_at BETWEEN ? AND ?", startDate, endDate).
 		Group("provider").
 		Scan(&providers)
 
 	var locations []dto.LocationCount
 	s.database.Model(&models.User{}).
 		Select("location, count(*) as count").
-		Where("location IS NOT NULL AND location != ''").
+		Where("location IS NOT NULL AND location != '' AND created_at BETWEEN ? AND ?", startDate, endDate).
 		Group("location").
 		Order("count DESC").
 		Limit(10).
 		Scan(&locations)
 
 	var totalUsers, verifiedUsers int64
-	s.database.Model(&models.User{}).Count(&totalUsers)
-	s.database.Model(&models.User{}).Where("verified = ?", true).Count(&verifiedUsers)
+	s.database.Model(&models.User{}).Where("created_at BETWEEN ? AND ?", startDate, endDate).Count(&totalUsers)
+	s.database.Model(&models.User{}).Where("verified = ? AND created_at BETWEEN ? AND ?", true, startDate, endDate).Count(&verifiedUsers)
 
 	var verificationRate float64
 	if totalUsers > 0 {
@@ -278,6 +272,7 @@ func (s *AnalyticsService) getUserStats(startDate, endDate time.Time) dto.UserSt
 		NewUsersToday:     newToday,
 		NewUsersThisWeek:  newWeek,
 		NewUsersThisMonth: newMonth,
+		NewUsersInRange:   newInRange,
 		UsersByProvider:   providers,
 		UsersByLocation:   locations,
 		VerificationRate:  verificationRate,
@@ -290,35 +285,36 @@ func (s *AnalyticsService) getJobStats(startDate, endDate time.Time) dto.JobStat
 	weekAgo := today.AddDate(0, 0, -7)
 	monthAgo := today.AddDate(0, -1, 0)
 
-	var activeJobs, newToday, newWeek, newMonth int64
+	var activeJobs, newToday, newWeek, newMonth, newInRange int64
 	s.database.Model(&models.Job{}).Count(&activeJobs)
 	s.database.Model(&models.Job{}).Where("created_at >= ?", today).Count(&newToday)
 	s.database.Model(&models.Job{}).Where("created_at >= ?", weekAgo).Count(&newWeek)
 	s.database.Model(&models.Job{}).Where("created_at >= ?", monthAgo).Count(&newMonth)
+	s.database.Model(&models.Job{}).Where("created_at BETWEEN ? AND ?", startDate, endDate).Count(&newInRange)
 
 	var jobsByType []dto.EmploymentTypeCount
 	s.database.Model(&models.Job{}).
 		Select("employment_type as type, count(*) as count").
+		Where("created_at BETWEEN ? AND ?", startDate, endDate).
 		Group("employment_type").
 		Scan(&jobsByType)
 
 	var jobsByLocation []dto.LocationCount
 	s.database.Model(&models.Job{}).
 		Select("location, count(*) as count").
+		Where("created_at BETWEEN ? AND ?", startDate, endDate).
 		Group("location").
 		Order("count DESC").
 		Limit(10).
 		Scan(&jobsByLocation)
 
-	// Average applications per job
 	var totalApps int64
-	s.database.Model(&models.JobApplication{}).Count(&totalApps)
+	s.database.Model(&models.JobApplication{}).Where("created_at BETWEEN ? AND ?", startDate, endDate).Count(&totalApps)
 	var avgApps float64
-	if activeJobs > 0 {
-		avgApps = float64(totalApps) / float64(activeJobs)
+	if newInRange > 0 {
+		avgApps = float64(totalApps) / float64(newInRange)
 	}
 
-	// Most viewed jobs
 	var mostViewed []dto.JobViewCount
 	s.database.Model(&models.JobView{}).
 		Select("job_views.job_id, jobs.title, count(*) as views").
@@ -334,6 +330,7 @@ func (s *AnalyticsService) getJobStats(startDate, endDate time.Time) dto.JobStat
 		NewJobsToday:        newToday,
 		NewJobsThisWeek:     newWeek,
 		NewJobsThisMonth:    newMonth,
+		NewJobsInRange:      newInRange,
 		JobsByType:          jobsByType,
 		JobsByLocation:      jobsByLocation,
 		AverageApplications: avgApps,
@@ -347,26 +344,28 @@ func (s *AnalyticsService) getApplicationStats(startDate, endDate time.Time) dto
 	weekAgo := today.AddDate(0, 0, -7)
 	monthAgo := today.AddDate(0, -1, 0)
 
-	var total, appsToday, appsWeek, appsMonth int64
+	var total, appsToday, appsWeek, appsMonth, appsInRange int64
 	s.database.Model(&models.JobApplication{}).Count(&total)
 	s.database.Model(&models.JobApplication{}).Where("created_at >= ?", today).Count(&appsToday)
 	s.database.Model(&models.JobApplication{}).Where("created_at >= ?", weekAgo).Count(&appsWeek)
 	s.database.Model(&models.JobApplication{}).Where("created_at >= ?", monthAgo).Count(&appsMonth)
+	s.database.Model(&models.JobApplication{}).Where("created_at BETWEEN ? AND ?", startDate, endDate).Count(&appsInRange)
 
 	var byStatus []dto.StatusCount
 	s.database.Model(&models.JobApplication{}).
 		Select("status, count(*) as count").
+		Where("created_at BETWEEN ? AND ?", startDate, endDate).
 		Group("status").
 		Scan(&byStatus)
 
 	var accepted, hired int64
-	s.database.Model(&models.JobApplication{}).Where("status = ?", "ACCEPTED").Count(&accepted)
-	s.database.Model(&models.JobApplication{}).Where("status = ?", "HIRED").Count(&hired)
+	s.database.Model(&models.JobApplication{}).Where("status = ? AND created_at BETWEEN ? AND ?", "ACCEPTED", startDate, endDate).Count(&accepted)
+	s.database.Model(&models.JobApplication{}).Where("status = ? AND created_at BETWEEN ? AND ?", "HIRED", startDate, endDate).Count(&hired)
 
 	var acceptanceRate, hireRate float64
-	if total > 0 {
-		acceptanceRate = float64(accepted) / float64(total) * 100
-		hireRate = float64(hired) / float64(total) * 100
+	if appsInRange > 0 {
+		acceptanceRate = float64(accepted) / float64(appsInRange) * 100
+		hireRate = float64(hired) / float64(appsInRange) * 100
 	}
 
 	return dto.ApplicationStatsResponse{
@@ -374,6 +373,7 @@ func (s *AnalyticsService) getApplicationStats(startDate, endDate time.Time) dto
 		ApplicationsToday:     appsToday,
 		ApplicationsThisWeek:  appsWeek,
 		ApplicationsThisMonth: appsMonth,
+		ApplicationsInRange:   appsInRange,
 		ApplicationsByStatus:  byStatus,
 		AcceptanceRate:        acceptanceRate,
 		HireRate:              hireRate,
@@ -385,7 +385,7 @@ func (s *AnalyticsService) getRevenueStats(startDate, endDate time.Time) dto.Rev
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	startOfLastMonth := startOfMonth.AddDate(0, -1, 0)
 
-	var totalRevenue, revenueThisMonth, revenueLastMonth float64
+	var totalRevenue, revenueThisMonth, revenueLastMonth, revenueInRange float64
 
 	s.database.Model(&models.SubscriptionInvoice{}).
 		Where("status = ?", "paid").
@@ -402,6 +402,11 @@ func (s *AnalyticsService) getRevenueStats(startDate, endDate time.Time) dto.Rev
 		Select("COALESCE(SUM(amount_paid), 0)").
 		Scan(&revenueLastMonth)
 
+	s.database.Model(&models.SubscriptionInvoice{}).
+		Where("status = ? AND paid_at BETWEEN ? AND ?", "paid", startDate, endDate).
+		Select("COALESCE(SUM(amount_paid), 0)").
+		Scan(&revenueInRange)
+
 	var monthlyGrowth float64
 	if revenueLastMonth > 0 {
 		monthlyGrowth = (revenueThisMonth - revenueLastMonth) / revenueLastMonth * 100
@@ -411,7 +416,7 @@ func (s *AnalyticsService) getRevenueStats(startDate, endDate time.Time) dto.Rev
 	s.database.Model(&models.UserSubscription{}).
 		Select("subscriptions.tier, count(*) as count").
 		Joins("JOIN subscriptions ON subscriptions.id = user_subscriptions.subscription_id").
-		Where("user_subscriptions.status = ?", "active").
+		Where("user_subscriptions.status = ? AND user_subscriptions.created_at BETWEEN ? AND ?", "active", startDate, endDate).
 		Group("subscriptions.tier").
 		Scan(&tierCounts)
 
@@ -426,6 +431,7 @@ func (s *AnalyticsService) getRevenueStats(startDate, endDate time.Time) dto.Rev
 		TotalRevenue:          totalRevenue,
 		RevenueThisMonth:      revenueThisMonth,
 		RevenueLastMonth:      revenueLastMonth,
+		RevenueInRange:        revenueInRange,
 		MonthlyGrowth:         monthlyGrowth,
 		SubscriptionsByTier:   tierCounts,
 		AverageRevenuePerUser: arpu,
@@ -439,13 +445,13 @@ func (s *AnalyticsService) getTopPerformers(startDate, endDate time.Time) dto.To
 			COUNT(DISTINCT j.id) as total_jobs,
 			COUNT(DISTINCT CASE WHEN ja.status = 'HIRED' THEN ja.id END) as total_hires
 		FROM users u
-		LEFT JOIN jobs j ON j.created_by = u.id
-		LEFT JOIN job_applications ja ON ja.job_id = j.id
+		LEFT JOIN jobs j ON j.created_by = u.id AND j.created_at BETWEEN ? AND ?
+		LEFT JOIN job_applications ja ON ja.job_id = j.id AND ja.created_at BETWEEN ? AND ?
 		WHERE u.is_recruiter = true
 		GROUP BY u.id, u.name
 		ORDER BY total_hires DESC, total_jobs DESC
 		LIMIT 10
-	`).Scan(&topRecruiters)
+	`, startDate, endDate, startDate, endDate).Scan(&topRecruiters)
 
 	var topJobs []dto.JobPerformance
 	s.database.Raw(`
@@ -453,12 +459,13 @@ func (s *AnalyticsService) getTopPerformers(startDate, endDate time.Time) dto.To
 			COUNT(DISTINCT jv.id) as views,
 			COUNT(DISTINCT ja.id) as applications
 		FROM jobs j
-		LEFT JOIN job_views jv ON jv.job_id = j.id
-		LEFT JOIN job_applications ja ON ja.job_id = j.id
+		LEFT JOIN job_views jv ON jv.job_id = j.id AND jv.created_at BETWEEN ? AND ?
+		LEFT JOIN job_applications ja ON ja.job_id = j.id AND ja.created_at BETWEEN ? AND ?
+		WHERE j.created_at BETWEEN ? AND ?
 		GROUP BY j.id, j.title, j.company
 		ORDER BY views DESC
 		LIMIT 10
-	`).Scan(&topJobs)
+	`, startDate, endDate, startDate, endDate, startDate, endDate).Scan(&topJobs)
 
 	var topTalents []dto.TalentPerformance
 	s.database.Raw(`
@@ -466,13 +473,13 @@ func (s *AnalyticsService) getTopPerformers(startDate, endDate time.Time) dto.To
 			COUNT(DISTINCT pv.id) as profile_views,
 			COUNT(DISTINCT ja.id) as applications
 		FROM users u
-		LEFT JOIN profile_views pv ON pv.profile_user_id = u.id
-		LEFT JOIN job_applications ja ON ja.applicant_id = u.id
+		LEFT JOIN profile_views pv ON pv.profile_user_id = u.id AND pv.created_at BETWEEN ? AND ?
+		LEFT JOIN job_applications ja ON ja.applicant_id = u.id AND ja.created_at BETWEEN ? AND ?
 		WHERE u.is_recruiter = false
 		GROUP BY u.id, u.name
 		ORDER BY profile_views DESC
 		LIMIT 10
-	`).Scan(&topTalents)
+	`, startDate, endDate, startDate, endDate).Scan(&topTalents)
 
 	return dto.TopPerformersResponse{
 		TopRecruiters: topRecruiters,
@@ -482,8 +489,6 @@ func (s *AnalyticsService) getTopPerformers(startDate, endDate time.Time) dto.To
 }
 
 // ==================== RECRUITER ANALYTICS ====================
-
-// GetRecruiterAnalytics returns analytics for a recruiter's jobs and applications
 func (s *AnalyticsService) GetRecruiterAnalytics(userID string, params dto.AnalyticsQueryParams) (*dto.RecruiterAnalytics, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -571,7 +576,6 @@ func (s *AnalyticsService) getRecruiterJobPerformance(userID uuid.UUID, startDat
 		ORDER BY j.posted_date DESC
 	`, startDate, endDate, userID).Scan(&performance)
 
-	// Calculate conversion rates
 	for i := range performance {
 		if performance[i].Views > 0 {
 			performance[i].ConversionRate = float64(performance[i].Applications) / float64(performance[i].Views) * 100
@@ -667,8 +671,6 @@ func (s *AnalyticsService) getTopApplicants(userID uuid.UUID, limit int) []dto.A
 }
 
 // ==================== TALENT ANALYTICS ====================
-
-// GetTalentAnalytics returns analytics for a talent's profile and applications
 func (s *AnalyticsService) GetTalentAnalytics(userID string, params dto.AnalyticsQueryParams) (*dto.TalentAnalytics, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -707,7 +709,6 @@ func (s *AnalyticsService) getTalentOverview(userID uuid.UUID) dto.TalentOvervie
 	s.database.Model(&models.JobApplication{}).Where("applicant_id = ? AND status = ?", userID, "ACCEPTED").Count(&acceptedApps)
 	s.database.Model(&models.ProfileView{}).Where("profile_user_id = ? AND viewer_is_recruiter = ?", userID, true).Count(&recruiterViews)
 
-	// Calculate profile completeness
 	var user models.User
 	s.database.Preload("Projects").Preload("Experiences").Preload("Education").
 		Preload("Skills").Preload("Certifications").First(&user, "id = ?", userID)
@@ -874,7 +875,6 @@ func (s *AnalyticsService) getViewerInsights(userID uuid.UUID, startDate, endDat
 }
 
 // ==================== HELPER METHODS ====================
-
 func (s *AnalyticsService) getTrendData(startDate, endDate time.Time, groupBy, statType string) []dto.TrendDataPoint {
 	var trendData []dto.TrendDataPoint
 
@@ -886,9 +886,25 @@ func (s *AnalyticsService) getTrendData(startDate, endDate time.Time, groupBy, s
 		dateFormat = "YYYY-MM"
 	}
 
+	var tableName string
+	switch statType {
+	case "users":
+		tableName = "users"
+	case "jobs":
+		tableName = "jobs"
+	case "applications":
+		tableName = "job_applications"
+	case "profile_views":
+		tableName = "profile_views"
+	case "job_views":
+		tableName = "job_views"
+	default:
+		tableName = "page_views"
+	}
+
 	s.database.Raw(`
 		SELECT TO_CHAR(created_at, ?) as date, COUNT(*) as value
-		FROM page_views
+		FROM `+tableName+`
 		WHERE created_at BETWEEN ? AND ?
 		GROUP BY TO_CHAR(created_at, ?)
 		ORDER BY date

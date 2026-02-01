@@ -64,12 +64,14 @@ func (s *UserService) GetUsers(params dto.UserPagination) (*dto.PaginatedRespons
 	}
 
 	offset := (q.Page - 1) * q.Limit
+
 	if err := query.
 		Preload("Projects").
 		Preload("Experiences").
 		Preload("Education").
 		Preload("Certifications").
 		Preload("Languages").
+		Preload("Company").
 		Offset(offset).
 		Order("created_at DESC").
 		Limit(q.Limit).
@@ -144,7 +146,41 @@ func (s *UserService) UpdateUser(id string, payload dto.UpdateUserDto) (*models.
 		return nil, err
 	}
 
-	// Handle associations using GORM's Association API
+	if payload.Company != nil {
+		if user.CompanyID != nil {
+			var existingCompany models.Company
+			if err := s.database.First(&existingCompany, "id = ?", user.CompanyID).Error; err == nil {
+				existingCompany.Name = payload.Company.Name
+				existingCompany.Industry = payload.Company.Industry
+				existingCompany.Size = payload.Company.Size
+				existingCompany.Website = payload.Company.Website
+				existingCompany.Location = payload.Company.Location
+				existingCompany.Logo = payload.Company.Logo
+				existingCompany.Description = payload.Company.Description
+				if err := s.database.Save(&existingCompany).Error; err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			company := models.Company{
+				Name:        payload.Company.Name,
+				Industry:    payload.Company.Industry,
+				Size:        payload.Company.Size,
+				Website:     payload.Company.Website,
+				Location:    payload.Company.Location,
+				Logo:        payload.Company.Logo,
+				Description: payload.Company.Description,
+			}
+			if err := s.database.Create(&company).Error; err != nil {
+				return nil, err
+			}
+			user.CompanyID = &company.ID
+			if err := s.database.Save(&user).Error; err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if payload.Projects != nil {
 		for i := range payload.Projects {
 			payload.Projects[i].UserID = user.ID
