@@ -34,7 +34,7 @@ func main() {
 		log.Fatal("Database error:", err)
 	}
 
-	lib.InitialiseJWT(string(config.AppConfig.JWTTokenSecret))
+	lib.InitialiseJWT(string(config.AppConfig.JWTSecret))
 
 	app := gin.Default()
 	app.RedirectTrailingSlash = false
@@ -62,7 +62,6 @@ func main() {
 	hub := lib.NewHub()
 	go hub.Run()
 
-	// Set up chat service as WebSocket message handler
 	notificationService := services.NewNotificationService(database.GetDatabase(), hub)
 	chatService := services.NewChatService(database.GetDatabase(), hub, notificationService)
 	hub.SetChatMessageHandler(chatService)
@@ -111,6 +110,7 @@ func main() {
 	routes.NotificationSettingsRoutes(router)
 	routes.AnnouncementRoutes(router, hub)
 	routes.ChatRoutes(router, hub)
+	routes.ReviewRoutes(router)
 	app.NoRoute(lib.GlobalNotFound())
 
 	if config.AppConfig.RunSeeds {
@@ -119,6 +119,22 @@ func main() {
 			log.Println("an error occurred while seeding", err)
 		}
 	}
+
+	scheduler := lib.NewCronScheduler()
+	subscriptionService := services.NewSubscriptionService(database.GetDatabase())
+
+	err = scheduler.AddJob("0 0 * * * *", func() {
+		log.Println("Running subscription expiry check...")
+		if err := subscriptionService.ProcessExpiredSubscriptions(); err != nil {
+			log.Printf("Error processing expired subscriptions: %v", err)
+		}
+	})
+	if err != nil {
+		log.Printf("Failed to add subscription expiry cron job: %v", err)
+	}
+
+	scheduler.Start()
+	defer scheduler.Stop()
 
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%s", config.AppConfig.Port),

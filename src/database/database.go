@@ -247,6 +247,7 @@ func runMigrations(db *gorm.DB) error {
 		{"035_create_conversations", &models.Conversation{}},
 		{"036_create_messages", &models.Message{}},
 		{"038_add_message_media", &models.Message{}},
+		{"039_create_reviews", &models.Review{}},
 	}
 
 	pendingCount := 0
