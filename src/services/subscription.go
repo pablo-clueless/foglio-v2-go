@@ -340,24 +340,24 @@ func normalizeSubscriptionQuery(q dto.Pagination) dto.Pagination {
 func (s *SubscriptionService) ProcessExpiredSubscriptions() error {
 	now := time.Now()
 
-	var expiredSubs []models.UserSubscription
+	var subscriptions []models.UserSubscription
 	err := s.database.
 		Where("status = ?", "active").
 		Where("is_active = ?", true).
 		Where("current_period_end < ?", now).
-		Find(&expiredSubs).Error
+		Find(&subscriptions).Error
 
 	if err != nil {
 		return err
 	}
 
-	if len(expiredSubs) == 0 {
+	if len(subscriptions) == 0 {
 		return nil
 	}
 
-	log.Printf("Found %d expired subscriptions to process", len(expiredSubs))
+	log.Printf("Found %d expired subscriptions to process", len(subscriptions))
 
-	for _, sub := range expiredSubs {
+	for _, sub := range subscriptions {
 		tx := s.database.Begin()
 		sub.Status = "expired"
 		sub.IsActive = false

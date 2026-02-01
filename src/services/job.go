@@ -38,6 +38,10 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		return nil, errors.New("you need to be a recruiter to post jobs")
 	}
 
+	if payload.Salary == nil {
+		return nil, errors.New("salary information is required")
+	}
+
 	if payload.Salary.Min == 0 || payload.Salary.Max == 0 {
 		return nil, errors.New("zero value not allowed")
 	}
@@ -50,8 +54,18 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		return nil, errors.New("you need to add at least one requirement")
 	}
 
+	var company models.Company
+	if err := s.database.Where("id = ?", payload.CompanyId).First(&company).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("company not found")
+		}
+		return nil, err
+	}
+
 	job := &models.Job{
 		Title:          payload.Title,
+		CompanyId:      company.ID,
+		Company:        company,
 		Location:       payload.Location,
 		Description:    payload.Description,
 		Deadline:       payload.Deadline,
@@ -60,6 +74,7 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		IsRemote:       payload.IsRemote,
 		EmploymentType: models.EmploymentType(payload.EmploymentType),
 		CreatedBy:      user.ID,
+		CreatedByUser:  *user,
 	}
 
 	if err := s.database.Create(&job).Error; err != nil {
