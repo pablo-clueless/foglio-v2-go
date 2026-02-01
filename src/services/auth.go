@@ -220,18 +220,25 @@ func (s *AuthService) RequestVerification(email string) (*models.User, error) {
 	return nil, nil
 }
 
-func (s *AuthService) Verification(otp string) (*SigninResponse, error) {
+func (s *AuthService) Verification(payload dto.VerificationDto) (*SigninResponse, error) {
 	var user models.User
 
-	if err := s.database.Where("otp = ?", otp).First(&user).Error; err != nil {
+	if payload.VerificationNumber == nil || payload.VerificationType == nil || payload.VerificationDocument == nil {
+		return nil, errors.New("missing verification fields")
+	}
+
+	if err := s.database.Where("verification_number = ? AND verification_type = ? AND verification_document = ?", payload.VerificationNumber, payload.VerificationType, payload.VerificationDocument).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
 		return nil, err
 	}
 
+	if user.Verified {
+		return nil, errors.New("user already verified")
+	}
+
 	user.Verified = true
-	user.Otp = ""
 	if err := s.database.Save(&user).Error; err != nil {
 		return nil, err
 	}
