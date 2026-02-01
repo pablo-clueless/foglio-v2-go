@@ -21,7 +21,6 @@ type Config struct {
 	CloudinaryName        string
 	CloudinarySecret      string
 	CookieDomain          string
-	CurrentUser           string
 	CurrentUserId         string
 	Environment           string
 	GithubClientId        string
@@ -63,7 +62,6 @@ func InitializeConfig() {
 		CloudinarySecret:      os.Getenv("CLOUDINARY_SECRET"),
 		CookieDomain:          os.Getenv("COOKIE_DOMAIN"),
 		CurrentUserId:         "CURRENT_USER_ID",
-		CurrentUser:           "CURRENT_USER",
 		Environment:           os.Getenv("ENVIRONMENT"),
 		GithubClientId:        os.Getenv("GITHUB_CLIENT_ID"),
 		GithubClientSecret:    os.Getenv("GITHUB_CLIENT_SECRET"),

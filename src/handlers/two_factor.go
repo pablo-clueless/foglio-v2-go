@@ -5,7 +5,6 @@ import (
 	"foglio/v2/src/database"
 	"foglio/v2/src/dto"
 	"foglio/v2/src/lib"
-	"foglio/v2/src/models"
 	"foglio/v2/src/services"
 
 	"github.com/gin-gonic/gin"
@@ -37,13 +36,17 @@ func NewTwoFactorHandler() *TwoFactorHandler {
 // @Router /auth/2fa/setup [post]
 func (h *TwoFactorHandler) Setup2FA() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser := user.(*models.User)
+		currentUser, err := h.authService.FindUserById(userID)
+		if err != nil {
+			lib.Unauthorized(ctx, "User not found")
+			return
+		}
 
 		if currentUser.IsTwoFactorEnabled {
 			lib.BadRequest(ctx, "2FA is already enabled", "2FA_ALREADY_ENABLED")
@@ -74,13 +77,11 @@ func (h *TwoFactorHandler) Setup2FA() gin.HandlerFunc {
 // @Router /auth/2fa/verify-setup [post]
 func (h *TwoFactorHandler) VerifySetup2FA() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
-
-		currentUser := user.(*models.User)
 
 		var payload dto.Verify2FASetupRequest
 		if err := ctx.ShouldBindJSON(&payload); err != nil {
@@ -88,7 +89,7 @@ func (h *TwoFactorHandler) VerifySetup2FA() gin.HandlerFunc {
 			return
 		}
 
-		if err := h.service.VerifyAndEnable(currentUser.ID.String(), payload.Code); err != nil {
+		if err := h.service.VerifyAndEnable(userID, payload.Code); err != nil {
 			lib.BadRequest(ctx, err.Error(), "VERIFICATION_FAILED")
 			return
 		}
@@ -154,13 +155,17 @@ func (h *TwoFactorHandler) Verify2FALogin() gin.HandlerFunc {
 // @Router /auth/2fa/disable [post]
 func (h *TwoFactorHandler) Disable2FA() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser := user.(*models.User)
+		currentUser, err := h.authService.FindUserById(userID)
+		if err != nil {
+			lib.Unauthorized(ctx, "User not found")
+			return
+		}
 
 		if !currentUser.IsTwoFactorEnabled {
 			lib.BadRequest(ctx, "2FA is not enabled", "2FA_NOT_ENABLED")
@@ -173,7 +178,7 @@ func (h *TwoFactorHandler) Disable2FA() gin.HandlerFunc {
 			return
 		}
 
-		if err := h.service.Disable2FA(currentUser.ID.String(), payload.Password); err != nil {
+		if err := h.service.Disable2FA(userID, payload.Password); err != nil {
 			lib.BadRequest(ctx, err.Error(), "DISABLE_FAILED")
 			return
 		}
@@ -196,13 +201,11 @@ func (h *TwoFactorHandler) Disable2FA() gin.HandlerFunc {
 // @Router /auth/2fa/backup-codes [post]
 func (h *TwoFactorHandler) RegenerateBackupCodes() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
-
-		currentUser := user.(*models.User)
 
 		var payload dto.Disable2FARequest
 		if err := ctx.ShouldBindJSON(&payload); err != nil {
@@ -210,7 +213,7 @@ func (h *TwoFactorHandler) RegenerateBackupCodes() gin.HandlerFunc {
 			return
 		}
 
-		codes, err := h.service.RegenerateBackupCodes(currentUser.ID.String(), payload.Password)
+		codes, err := h.service.RegenerateBackupCodes(userID, payload.Password)
 		if err != nil {
 			lib.BadRequest(ctx, err.Error(), "REGENERATE_FAILED")
 			return
@@ -235,15 +238,13 @@ func (h *TwoFactorHandler) RegenerateBackupCodes() gin.HandlerFunc {
 // @Router /auth/2fa/status [get]
 func (h *TwoFactorHandler) GetStatus() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		user, exists := ctx.Get(config.AppConfig.CurrentUser)
-		if !exists {
+		userID := ctx.GetString(config.AppConfig.CurrentUserId)
+		if userID == "" {
 			lib.Unauthorized(ctx, "User not authenticated")
 			return
 		}
 
-		currentUser := user.(*models.User)
-
-		status, err := h.service.GetStatus(currentUser.ID.String())
+		status, err := h.service.GetStatus(userID)
 		if err != nil {
 			lib.InternalServerError(ctx, "Failed to get 2FA status")
 			return
