@@ -65,7 +65,6 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 	job := &models.Job{
 		Title:          payload.Title,
 		CompanyId:      company.ID,
-		Company:        company,
 		Location:       payload.Location,
 		Description:    payload.Description,
 		Deadline:       payload.Deadline,
@@ -74,10 +73,14 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		IsRemote:       payload.IsRemote,
 		EmploymentType: models.EmploymentType(payload.EmploymentType),
 		CreatedBy:      user.ID,
-		CreatedByUser:  *user,
 	}
 
-	if err := s.database.Create(&job).Error; err != nil {
+	if err := s.database.Create(job).Error; err != nil {
+		return nil, err
+	}
+
+	// Load relationships for response
+	if err := s.database.Preload("Company").Preload("CreatedByUser").First(job, "id = ?", job.ID).Error; err != nil {
 		return nil, err
 	}
 
