@@ -79,7 +79,6 @@ func (s *JobService) CreateJob(id string, payload dto.CreateJobDto) (*models.Job
 		return nil, err
 	}
 
-	// Load relationships for response
 	if err := s.database.Preload("Company").Preload("CreatedByUser").First(job, "id = ?", job.ID).Error; err != nil {
 		return nil, err
 	}
@@ -182,6 +181,7 @@ func (s *JobService) GetJobs(params dto.JobPagination) (*dto.PaginatedResponse[m
 	offset := (q.Page - 1) * q.Limit
 
 	if err := query.
+		Preload("Company").
 		Preload("CreatedByUser").
 		Preload("Comments").
 		Preload("Comments.CreatedByUser").
@@ -231,6 +231,7 @@ func (s *JobService) GetJobsByUser(id string, params dto.Pagination) (*dto.Pagin
 	offset := (params.Page - 1) * params.Limit
 
 	if err := query.
+		Preload("Company").
 		Preload("CreatedByUser").
 		Preload("Comments").
 		Preload("Comments.CreatedByUser").

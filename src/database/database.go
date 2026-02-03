@@ -147,7 +147,6 @@ func EnableUUIDExtension(db *gorm.DB) error {
 		}
 	}
 
-	// Create custom enum types required by models
 	if err := createEnumTypes(db); err != nil {
 		return err
 	}
@@ -155,7 +154,6 @@ func EnableUUIDExtension(db *gorm.DB) error {
 	return nil
 }
 
-// createEnumTypes creates PostgreSQL enum types required by models
 func createEnumTypes(db *gorm.DB) error {
 	enumTypes := []struct {
 		name   string
@@ -168,14 +166,12 @@ func createEnumTypes(db *gorm.DB) error {
 	}
 
 	for _, enum := range enumTypes {
-		// Check if enum type already exists
 		var exists bool
 		db.Raw("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = ?)", enum.name).Scan(&exists)
 		if exists {
 			continue
 		}
 
-		// Create the enum type
 		values := make([]string, len(enum.values))
 		for i, v := range enum.values {
 			values[i] = fmt.Sprintf("'%s'", v)
