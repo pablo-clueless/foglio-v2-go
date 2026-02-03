@@ -130,8 +130,7 @@ func (h *JobHandler) GetJob() gin.HandlerFunc {
 
 func (h *JobHandler) ApplyToJob() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := ctx.Param("userId")
-		jobId := ctx.Param("jobId")
+		jobId := ctx.Param("id")
 		var payload dto.JobApplicationDto
 
 		if err := ctx.ShouldBind(&payload); err != nil {
@@ -139,7 +138,7 @@ func (h *JobHandler) ApplyToJob() gin.HandlerFunc {
 			return
 		}
 
-		err := h.service.ApplyToJob(userId, jobId, payload)
+		err := h.service.ApplyToJob(jobId, payload)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
