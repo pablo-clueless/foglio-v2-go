@@ -257,37 +257,36 @@ func runMigrations(db *gorm.DB) error {
 		}
 	}
 
-	if pendingCount == 0 {
-		log.Println("No pending migrations")
-		return nil
+	if pendingCount > 0 {
+		log.Printf("Running %d pending migration(s)...", pendingCount)
+
+		for _, migration := range migrations {
+			if appliedMap[migration.name] {
+				continue
+			}
+
+			log.Printf("Applying migration: %s", migration.name)
+			if err := db.AutoMigrate(migration.model); err != nil {
+				return fmt.Errorf("migration %s failed: %w", migration.name, err)
+			}
+
+			record := SchemaMigration{
+				Name:      migration.name,
+				AppliedAt: time.Now(),
+			}
+			if err := db.Create(&record).Error; err != nil {
+				return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
+			}
+
+			log.Printf("Migration %s applied successfully", migration.name)
+		}
+
+		log.Println("All model migrations completed successfully")
+	} else {
+		log.Println("No pending model migrations")
 	}
 
-	log.Printf("Running %d pending migration(s)...", pendingCount)
-
-	for _, migration := range migrations {
-		if appliedMap[migration.name] {
-			continue
-		}
-
-		log.Printf("Applying migration: %s", migration.name)
-		if err := db.AutoMigrate(migration.model); err != nil {
-			return fmt.Errorf("migration %s failed: %w", migration.name, err)
-		}
-
-		record := SchemaMigration{
-			Name:      migration.name,
-			AppliedAt: time.Now(),
-		}
-		if err := db.Create(&record).Error; err != nil {
-			return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
-		}
-
-		log.Printf("Migration %s applied successfully", migration.name)
-	}
-
-	log.Println("All migrations completed successfully")
-
-	// Run custom SQL migrations for constraints
+	// Run custom SQL migrations for constraints (always check these)
 	if err := runCustomMigrations(db, appliedMap); err != nil {
 		return err
 	}
