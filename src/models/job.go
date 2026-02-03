@@ -88,10 +88,9 @@ type JobApplication struct {
 	ID             uuid.UUID       `json:"id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	JobID          uuid.UUID       `json:"job_id" gorm:"type:uuid;not null;index"`
 	Job            Job             `json:"job" gorm:"foreignKey:JobID;references:ID;constraint:OnDelete:CASCADE"`
-	ApplicantID    uuid.UUID       `json:"applicantId" gorm:"type:uuid;not null;index"`
+	ApplicantID    uuid.UUID       `json:"applicant_id" gorm:"type:uuid;not null;index"`
 	Applicant      User            `json:"applicant" gorm:"foreignKey:ApplicantID;references:ID;constraint:OnDelete:CASCADE"`
-	Resume         string          `json:"resume" gorm:"not null"`
-	CoverLetter    *string         `json:"coverLetter,omitempty"`
+	CoverLetter    *string         `json:"cover_letter,omitempty"`
 	Status         ApplicantStatus `json:"status" gorm:"not null;default:'pending'"`
 	SubmissionDate time.Time       `json:"submission_ate" gorm:"not null"`
 	LastUpdated    time.Time       `json:"last_updated" gorm:"not null"`
