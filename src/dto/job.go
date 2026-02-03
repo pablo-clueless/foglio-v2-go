@@ -28,12 +28,9 @@ type UpdateJobDto struct {
 }
 
 type JobApplicationDto struct {
-	Resume         string    `json:"resume"`
-	CoverLetter    string    `json:"coverLetter,omitempty"`
-	Status         string    `json:"status"`
-	SubmissionDate time.Time `json:"submissionDate"`
-	LastUpdated    time.Time `json:"lastUpdated"`
-	Notes          *string   `json:"notes,omitempty"`
+	ApplicantID string  `json:"applicant_id"`
+	CoverLetter *string `json:"cover_letter,omitempty"`
+	Notes       *string `json:"notes,omitempty"`
 }
 
 type JobSearch struct {
