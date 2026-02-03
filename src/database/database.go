@@ -208,7 +208,7 @@ func runMigrations(db *gorm.DB) error {
 
 	migrations := []struct {
 		name  string
-		model interface{}
+		model any
 	}{
 		{"001_create_companies", &models.Company{}},
 		{"002_create_users", &models.User{}},
@@ -257,37 +257,35 @@ func runMigrations(db *gorm.DB) error {
 		}
 	}
 
-	if pendingCount == 0 {
-		log.Println("No pending migrations")
-		return nil
+	if pendingCount > 0 {
+		log.Printf("Running %d pending migration(s)...", pendingCount)
+
+		for _, migration := range migrations {
+			if appliedMap[migration.name] {
+				continue
+			}
+
+			log.Printf("Applying migration: %s", migration.name)
+			if err := db.AutoMigrate(migration.model); err != nil {
+				return fmt.Errorf("migration %s failed: %w", migration.name, err)
+			}
+
+			record := SchemaMigration{
+				Name:      migration.name,
+				AppliedAt: time.Now(),
+			}
+			if err := db.Create(&record).Error; err != nil {
+				return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
+			}
+
+			log.Printf("Migration %s applied successfully", migration.name)
+		}
+
+		log.Println("All model migrations completed successfully")
+	} else {
+		log.Println("No pending model migrations")
 	}
 
-	log.Printf("Running %d pending migration(s)...", pendingCount)
-
-	for _, migration := range migrations {
-		if appliedMap[migration.name] {
-			continue
-		}
-
-		log.Printf("Applying migration: %s", migration.name)
-		if err := db.AutoMigrate(migration.model); err != nil {
-			return fmt.Errorf("migration %s failed: %w", migration.name, err)
-		}
-
-		record := SchemaMigration{
-			Name:      migration.name,
-			AppliedAt: time.Now(),
-		}
-		if err := db.Create(&record).Error; err != nil {
-			return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
-		}
-
-		log.Printf("Migration %s applied successfully", migration.name)
-	}
-
-	log.Println("All migrations completed successfully")
-
-	// Run custom SQL migrations for constraints
 	if err := runCustomMigrations(db, appliedMap); err != nil {
 		return err
 	}
@@ -295,7 +293,6 @@ func runMigrations(db *gorm.DB) error {
 	return nil
 }
 
-// runCustomMigrations runs SQL-based migrations that can't be done with AutoMigrate
 func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
 	customMigrations := []struct {
 		name string
