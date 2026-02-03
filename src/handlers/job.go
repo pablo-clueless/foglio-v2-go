@@ -130,8 +130,8 @@ func (h *JobHandler) GetJob() gin.HandlerFunc {
 
 func (h *JobHandler) ApplyToJob() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := ctx.Param("userId")
-		jobId := ctx.Param("jobId")
+		userId := ctx.GetString(config.AppConfig.CurrentUserId)
+		jobId := ctx.Param("id")
 		var payload dto.JobApplicationDto
 
 		if err := ctx.ShouldBind(&payload); err != nil {
