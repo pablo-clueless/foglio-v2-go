@@ -318,6 +318,24 @@ func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
 				  ON conversations (LEAST(participant1, participant2), GREATEST(participant1, participant2))
 				  WHERE deleted_at IS NULL`,
 		},
+		{
+			name: "040_migrate_jobs_company_to_company_id",
+			sql: `DO $$
+				  BEGIN
+				      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'jobs' AND column_name = 'company_id') THEN
+				          ALTER TABLE jobs ADD COLUMN company_id uuid;
+				      END IF;
+				      IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'fk_jobs_company' AND table_name = 'jobs') THEN
+				          ALTER TABLE jobs ADD CONSTRAINT fk_jobs_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+				      END IF;
+				      IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_jobs_company_id') THEN
+				          CREATE INDEX idx_jobs_company_id ON jobs(company_id);
+				      END IF;
+				      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'jobs' AND column_name = 'company') THEN
+				          ALTER TABLE jobs DROP COLUMN company;
+				      END IF;
+				  END $$;`,
+		},
 	}
 
 	for _, migration := range customMigrations {

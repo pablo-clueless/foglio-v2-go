@@ -24,14 +24,14 @@ func NewJobHandler() *JobHandler {
 func (h *JobHandler) CreateJob() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var payload dto.CreateJobDto
-		id := ctx.Param("id")
+		userId := ctx.GetString(config.AppConfig.CurrentUserId)
 
 		if err := ctx.ShouldBind(&payload); err != nil {
 			lib.BadRequest(ctx, err.Error(), "400")
 			return
 		}
 
-		job, err := h.service.CreateJob(id, payload)
+		job, err := h.service.CreateJob(userId, payload)
 		if err != nil {
 			lib.InternalServerError(ctx, "Internal server error,"+err.Error())
 			return
