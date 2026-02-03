@@ -278,9 +278,9 @@ func (s *JobService) GetJob(id string) (*models.Job, error) {
 	return &job, nil
 }
 
-func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplicationDto) error {
+func (s *JobService) ApplyToJob(jobId string, payload dto.JobApplicationDto) error {
 	auth := NewAuthService(s.database)
-	user, err := auth.FindUserById(userId)
+	user, err := auth.FindUserById(payload.ApplicantID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("user not found")
@@ -310,8 +310,7 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	application := &models.JobApplication{
 		JobID:       job.ID,
 		ApplicantID: user.ID,
-		Resume:      payload.Resume,
-		CoverLetter: &payload.CoverLetter,
+		CoverLetter: payload.CoverLetter,
 		Notes:       payload.Notes,
 	}
 
@@ -322,7 +321,7 @@ func (s *JobService) ApplyToJob(userId, jobId string, payload dto.JobApplication
 	go func() {
 		if err := s.notification.NotifyJobApplication(
 			job.CreatedBy.String(),
-			userId,
+			user.ID.String(),
 			jobId,
 			job.Title,
 			user.Name,
