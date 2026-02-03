@@ -208,7 +208,7 @@ func runMigrations(db *gorm.DB) error {
 
 	migrations := []struct {
 		name  string
-		model interface{}
+		model any
 	}{
 		{"001_create_companies", &models.Company{}},
 		{"002_create_users", &models.User{}},
@@ -286,7 +286,6 @@ func runMigrations(db *gorm.DB) error {
 		log.Println("No pending model migrations")
 	}
 
-	// Run custom SQL migrations for constraints (always check these)
 	if err := runCustomMigrations(db, appliedMap); err != nil {
 		return err
 	}
@@ -294,7 +293,6 @@ func runMigrations(db *gorm.DB) error {
 	return nil
 }
 
-// runCustomMigrations runs SQL-based migrations that can't be done with AutoMigrate
 func runCustomMigrations(db *gorm.DB, appliedMap map[string]bool) error {
 	customMigrations := []struct {
 		name string
