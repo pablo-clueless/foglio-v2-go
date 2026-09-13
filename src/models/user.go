@@ -41,11 +41,11 @@ type User struct {
 	CurrentSubscription  *UserSubscription  `gorm:"foreignKey:UserID" json:"current_subscription,omitempty"`
 	SubscriptionHistory  []UserSubscription `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"subscription_history,omitempty"`
 	Skills               pq.StringArray     `gorm:"type:text[]" json:"skills"`
-	Projects             []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects,"`
-	Experiences          []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences,"`
-	Education            []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education,"`
-	Certifications       []Certification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications,"`
-	Languages            []Language         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages,"`
+	Projects             []Project          `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"projects"`
+	Experiences          []Experience       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"experiences"`
+	Education            []Education        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"education"`
+	Certifications       []Certification    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"certifications"`
+	Languages            []Language         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"languages"`
 	IsTwoFactorEnabled   bool               `json:"is_two_factor_enabled"`
 	TwoFactorSecret      *string            `gorm:"column:two_factor_secret" json:"-"`
 	TwoFactorBackupCodes pq.StringArray     `gorm:"type:text[];column:two_factor_backup_codes" json:"-"`
