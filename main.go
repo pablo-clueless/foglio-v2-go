@@ -140,7 +140,11 @@ func main() {
 			log.Printf("Self-ping failed: %v", err)
 			return
 		}
-		defer resp.Body.Close()
+					defer func() {
+				if err := resp.Body.Close(); err != nil {
+					log.Printf("Error closing response body: %v", err)
+				}
+			}()
 		log.Printf("Self-ping successful: %s", resp.Status)
 	})
 	if err != nil {
