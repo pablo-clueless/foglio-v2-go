@@ -133,6 +133,20 @@ func main() {
 		log.Printf("Failed to add subscription expiry cron job: %v", err)
 	}
 
+	err = scheduler.AddJob("0 */10 * * * *", func() {
+		url := fmt.Sprintf("http://localhost:%s/%s/health", config.AppConfig.Port, config.AppConfig.Version)
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Printf("Self-ping failed: %v", err)
+			return
+		}
+		defer resp.Body.Close()
+		log.Printf("Self-ping successful: %s", resp.Status)
+	})
+	if err != nil {
+		log.Printf("Failed to add self-ping cron job: %v", err)
+	}
+
 	scheduler.Start()
 	defer scheduler.Stop()
 
